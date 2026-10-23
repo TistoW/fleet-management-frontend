@@ -1,10 +1,12 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
+import type { RouteView } from '../../api/routes'
 import PageSizeSelect from '../../components/PageSizeSelect'
 import Pagination from '../../components/Pagination'
 import Spinner from '../../components/Spinner'
 import { useUrlState } from '../../hooks/useUrlState'
 import { useVehicles } from '../../hooks/useVehicles'
 import { pageAfterSizeChange, paginate, rangeText } from '../../lib/paginate'
+import VehicleFilters from './VehicleFilters'
 import VehicleGrid from './VehicleGrid'
 
 export default function VehiclesPage() {
@@ -18,10 +20,17 @@ export default function VehiclesPage() {
     if (data && result.page !== url.page) setUrl({ page: result.page }, { replace: true })
   }, [data, result.page, url.page, setUrl])
 
+  const knownRoutes = useMemo(() => {
+    const seen = new Map<string, RouteView>()
+    for (const v of data ?? []) if (v.route) seen.set(v.route.id, v.route)
+    return [...seen.values()]
+  }, [data])
+
   const showBars = !!data && data.length > 0
 
   return (
     <>
+      <VehicleFilters routes={url.routes} onRoutesChange={(routes) => setUrl({ routes })} knownRoutes={knownRoutes} />
       {data && (
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <p className="flex items-center gap-2 text-sm text-ink-muted tabular-nums" aria-live="polite">

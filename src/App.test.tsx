@@ -13,7 +13,9 @@ it('menampilkan judul aplikasi dan rentang data', async () => {
       },
     ],
   }
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify(doc))))
+  vi.stubGlobal('fetch', vi.fn(async (url: URL) =>
+      new Response(JSON.stringify(url.pathname === '/routes' ? { data: [] } : doc)),
+    ))
   render(<App />)
   expect(screen.getByRole('heading', { name: 'Pantau Armada' })).toBeInTheDocument()
   expect(await screen.findByText('Menampilkan 1-1 dari 1 kendaraan')).toBeInTheDocument()
