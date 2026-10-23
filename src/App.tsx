@@ -1,37 +1,13 @@
 import { Icon } from '@iconify/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { shouldRetry } from './api/errors'
-import VehicleGrid from './features/vehicles/VehicleGrid'
-import { useUrlState } from './hooks/useUrlState'
-import { useVehicles } from './hooks/useVehicles'
+import VehiclesPage from './features/vehicles/VehiclesPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: { staleTime: 15_000, retry: shouldRetry, refetchOnWindowFocus: false },
   },
 })
-
-function VehicleList() {
-  const [url, setUrl] = useUrlState()
-  const { data, isPending, error, refetch } = useVehicles({ routes: url.routes, trips: url.trips })
-  const hasFilters = url.routes.length > 0 || url.trips.length > 0
-
-  return (
-    <>
-      {data && <p className="mb-4 text-sm text-ink-muted">{data.length} kendaraan</p>}
-      <VehicleGrid
-        vehicles={data}
-        isPending={isPending}
-        error={error}
-        skeletonCount={url.size}
-        hasFilters={hasFilters}
-        onClearFilters={() => setUrl({ routes: [], trips: [] })}
-        onRetry={() => void refetch()}
-        onOpen={(id) => setUrl({ vehicle: id })}
-      />
-    </>
-  )
-}
 
 export default function App() {
   return (
@@ -47,7 +23,7 @@ export default function App() {
           </div>
         </header>
         <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
-          <VehicleList />
+          <VehiclesPage />
         </main>
       </div>
     </QueryClientProvider>
