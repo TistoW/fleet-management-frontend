@@ -1,12 +1,18 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { describeError } from '../../api/errors'
 import type { RouteView } from '../../api/routes'
+import type { TripView } from '../../api/trips'
 import MultiSelect, { type Option } from '../../components/MultiSelect'
 import { useRouteOptions } from '../../hooks/useRouteOptions'
+import { useTripOptions } from '../../hooks/useTripOptions'
+import type { UrlState } from '../../hooks/useUrlState'
+import { useVehicles } from '../../hooks/useVehicles'
+import { pruneTrips } from '../../lib/tripSelection'
 
 interface Props {
   routes: string[]
-  onRoutesChange: (routes: string[]) => void
+  trips: string[]
+  onChange: (patch: Partial<Pick<UrlState, 'routes' | 'trips'>>, opts?: { replace?: boolean }) => void
   /** Routes seen on vehicles, used to name chips from the URL before /routes has loaded them. */
   knownRoutes?: RouteView[]
 }
@@ -18,28 +24,126 @@ const toOption = (r: RouteView): Option => ({
   swatch: r.color,
 })
 
-export default function VehicleFilters({ routes, onRoutesChange, knownRoutes = [] }: Props) {
+const RUNNING = 'Sedang berjalan'
+const ALL = 'Semua trip hari ini'
+
+export default function VehicleFilters({ routes, trips, onChange, knownRoutes = [] }: Props) {
   const q = useRouteOptions()
   const options = useMemo(() => q.routes.map(toOption), [q.routes])
   const known = useMemo(() => knownRoutes.map(toOption), [knownRoutes])
+  const [notice, setNotice] = useState('')
+
+  // Same cache entry as the page when no trip is selected, so usually no extra request.
+  const running = useVehicles({ routes })
+  const runningIds = useMemo(
+    () => [...new Set((running.data ?? []).map((v) => v.tripId).filter((id): id is string => !!id))],
+    [running.data],
+  )
+  const t = useTripOptions(routes, runningIds, trips)
+
+  const routeById = useMemo(() => {
+    const m = new Map<string, RouteView>()
+    for (const r of [...knownRoutes, ...q.routes]) m.set(r.id, r)
+    return m
+  }, [knownRoutes, q.routes])
+
+  const tripById = useMemo(() => {
+    const m = new Map<string, TripView>()
+    for (const x of [...t.allTrips, ...t.namedTrips]) m.set(x.id, x)
+    return m
+  }, [t.allTrips, t.namedTrips])
+
+  const toTripOption = (x: TripView, group: string): Option => {
+    const r = x.routeId ? routeById.get(x.routeId) : undefined
+    const dir = r?.directionNames[x.directionId]
+    return {
+      value: x.id,
+      label: x.headsign || x.name || `Trip ${x.id}`,
+      description: [r?.name, dir && `arah ${dir}`, `trip ${x.id}`].filter(Boolean).join(' · '),
+      swatch: r?.color,
+      group,
+    }
+  }
+
+  const tripOptions = useMemo(() => {
+    const runningSet = new Set(runningIds)
+    const live = t.namedTrips.filter((x) => runningSet.has(x.id))
+    return [
+      ...live.map((x) => toTripOption(x, RUNNING)),
+      ...t.allTrips.filter((x) => !runningSet.has(x.id)).map((x) => toTripOption(x, ALL)),
+    ]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [runningIds, t.namedTrips, t.allTrips, routeById])
+
+  const tripChips = useMemo(
+    () => trips.map((id) => tripById.get(id)).filter((x): x is TripView => !!x).map((x) => toTripOption(x, ALL)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [trips, tripById, routeById],
+  )
+
+  const routeOf = (id: string) => tripById.get(id)?.routeId
+
+  // Trips restored from the URL whose route is not selected (or no route at all) are dropped.
+  useEffect(() => {
+    const { kept, removed } = pruneTrips(trips, routes, routeOf)
+    if (removed.length) onChange({ trips: kept }, { replace: true })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trips, routes, tripById])
+
+  const changeRoutes = (next: string[]) => {
+    const { kept, removed } = pruneTrips(trips, next, routeOf)
+    const names = [...new Set(removed.map((id) => routeById.get(routeOf(id) ?? '')?.name).filter(Boolean))]
+    setNotice(removed.length ? `${removed.length} trip ikut dilepas${names.length ? ` dari ${names.join(', ')}` : ''}` : '')
+    onChange({ routes: next, trips: kept })
+  }
+
+  useEffect(() => {
+    if (!notice) return
+    const id = setTimeout(() => setNotice(''), 4000)
+    return () => clearTimeout(id)
+  }, [notice])
+
+  const noRoute = routes.length === 0
 
   return (
-    <div className="mb-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      <MultiSelect
-        label="Route"
-        placeholder="Semua route"
-        options={options}
-        selected={routes}
-        selectedOptions={known}
-        onChange={onRoutesChange}
-        isLoading={q.isPending}
-        error={q.isError && options.length === 0 ? describeError(q.error).title : undefined}
-        onRetry={() => void q.refetch()}
-        hasMore={q.hasNextPage}
-        isLoadingMore={q.isFetchingNextPage}
-        onLoadMore={() => void q.fetchNextPage()}
-        emptyText="Tidak ada route"
-      />
+    <div className="mb-5">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <MultiSelect
+          label="Rute"
+          placeholder="Semua rute"
+          options={options}
+          selected={routes}
+          selectedOptions={known}
+          onChange={changeRoutes}
+          isLoading={q.isPending}
+          error={q.isError && options.length === 0 ? describeError(q.error).title : undefined}
+          onRetry={() => void q.refetch()}
+          hasMore={q.hasNextPage}
+          isLoadingMore={q.isFetchingNextPage}
+          onLoadMore={() => void q.fetchNextPage()}
+          emptyText="Tidak ada rute"
+        />
+        <MultiSelect
+          label="Trip"
+          placeholder="Semua trip"
+          options={tripOptions}
+          selected={trips}
+          selectedOptions={tripChips}
+          onChange={(next) => onChange({ trips: next })}
+          disabled={noRoute}
+          disabledHint="Pilih rute dulu untuk melihat trip"
+          isLoading={!noRoute && t.all.isPending && tripOptions.length === 0}
+          error={t.all.isError && tripOptions.length === 0 ? describeError(t.all.error).title : undefined}
+          onRetry={() => void t.all.refetch()}
+          hasMore={t.all.hasNextPage}
+          isLoadingMore={t.all.isFetchingNextPage}
+          onLoadMore={() => void t.all.fetchNextPage()}
+          emptyText="Belum ada trip hari ini untuk rute ini"
+        />
+      </div>
+      <p className="mt-2 min-h-5 text-xs text-ink-muted" aria-live="polite">
+        {notice || (noRoute ? '' : 'Trip mempersempit hasil di dalam rute yang dipilih')}
+      </p>
     </div>
   )
 }

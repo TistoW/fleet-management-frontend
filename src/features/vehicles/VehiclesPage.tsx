@@ -30,7 +30,7 @@ export default function VehiclesPage() {
 
   return (
     <>
-      <VehicleFilters routes={url.routes} onRoutesChange={(routes) => setUrl({ routes })} knownRoutes={knownRoutes} />
+      <VehicleFilters routes={url.routes} trips={url.trips} onChange={setUrl} knownRoutes={knownRoutes} />
       {data && (
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <p className="flex items-center gap-2 text-sm text-ink-muted tabular-nums" aria-live="polite">
