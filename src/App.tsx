@@ -13,14 +13,22 @@ const queryClient = new QueryClient({
 
 function VehicleList() {
   const [url, setUrl] = useUrlState()
-  const { data, isPending, isError } = useVehicles({ routes: url.routes, trips: url.trips })
+  const { data, isPending, error, refetch } = useVehicles({ routes: url.routes, trips: url.trips })
+  const hasFilters = url.routes.length > 0 || url.trips.length > 0
 
-  if (isPending) return <p className="text-ink-muted">Memuat kendaraan...</p>
-  if (isError) return <p className="text-danger">Gagal memuat kendaraan.</p>
   return (
     <>
-      <p className="mb-4 text-sm text-ink-muted">{data.length} kendaraan</p>
-      <VehicleGrid vehicles={data} onOpen={(id) => setUrl({ vehicle: id })} />
+      {data && <p className="mb-4 text-sm text-ink-muted">{data.length} kendaraan</p>}
+      <VehicleGrid
+        vehicles={data}
+        isPending={isPending}
+        error={error}
+        skeletonCount={url.size}
+        hasFilters={hasFilters}
+        onClearFilters={() => setUrl({ routes: [], trips: [] })}
+        onRetry={() => void refetch()}
+        onOpen={(id) => setUrl({ vehicle: id })}
+      />
     </>
   )
 }
