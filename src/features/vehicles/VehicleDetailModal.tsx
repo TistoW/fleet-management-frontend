@@ -1,5 +1,5 @@
 import { Icon } from '@iconify/react'
-import { useEffect, useId, useRef, type ReactNode } from 'react'
+import { lazy, Suspense, useEffect, useId, useRef, type ReactNode } from 'react'
 import { ApiError } from '../../api/errors'
 import type { VehicleView } from '../../api/vehicles'
 import ErrorState from '../../components/ErrorState'
@@ -7,7 +7,11 @@ import { DetailRowSkeleton } from '../../components/Skeletons'
 import StatusBadge from '../../components/StatusBadge'
 import { useVehicleDetail } from '../../hooks/useVehicleDetail'
 import { formatClockWib, formatCoord, formatRelative } from '../../lib/format'
+import Spinner from '../../components/Spinner'
 import { occupancyLabel, routeTypeLabel, statusInfo } from '../../lib/status'
+
+// Leaflet (~150 KB) only loads when a popup opens.
+const VehicleMap = lazy(() => import('./VehicleMap'))
 
 interface Props {
   id: string
@@ -195,11 +199,30 @@ export default function VehicleDetailModal({ id, preview, onClose }: Props) {
               </>
             )}
           </div>
-          <div
-            aria-label="Area peta"
-            className="flex min-h-48 items-center justify-center rounded-lg border border-dashed border-line bg-canvas text-sm text-ink-muted"
-          >
-            Peta posisi
+          <div className="min-h-64">
+            {v && v.lat != null && v.lng != null ? (
+              <Suspense
+                fallback={
+                  <div className="flex h-full min-h-64 items-center justify-center rounded-lg bg-canvas motion-safe:animate-pulse">
+                    <Spinner className="size-6 text-ink-muted" />
+                  </div>
+                }
+              >
+                <VehicleMap
+                  lat={v.lat}
+                  lng={v.lng}
+                  bearing={d?.bearing ?? null}
+                  color={route?.color ?? '#5B6863'}
+                  textColor={route?.textColor ?? '#FFFFFF'}
+                  label={v.label}
+                  stop={d?.stop && d.stop.lat != null && d.stop.lng != null ? { lat: d.stop.lat, lng: d.stop.lng, name: d.stop.name } : undefined}
+                />
+              </Suspense>
+            ) : (
+              <div className="flex h-full min-h-64 items-center justify-center rounded-lg bg-canvas px-4 text-center text-sm text-ink-muted">
+                {d ? 'Posisi kendaraan belum tersedia' : <Spinner className="size-6" />}
+              </div>
+            )}
           </div>
         </div>
       )}
