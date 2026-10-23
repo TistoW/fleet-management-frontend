@@ -7,6 +7,7 @@ import { useUrlState } from '../../hooks/useUrlState'
 import { useVehicles } from '../../hooks/useVehicles'
 import { pageAfterSizeChange, paginate, rangeText } from '../../lib/paginate'
 import VehicleFilters from './VehicleFilters'
+import VehicleDetailModal from './VehicleDetailModal'
 import VehicleGrid from './VehicleGrid'
 
 export default function VehiclesPage() {
@@ -52,6 +53,13 @@ export default function VehiclesPage() {
           onOpen={(id) => setUrl({ vehicle: id })}
         />
       </div>
+      {url.vehicle && (
+        <VehicleDetailModal
+          id={url.vehicle}
+          preview={data?.find((x) => x.id === url.vehicle)}
+          onClose={() => setUrl({ vehicle: null }, { replace: true })}
+        />
+      )}
       {showBars && (
         <div className="mt-6">
           <Pagination page={result.page} pageCount={result.pageCount} onPageChange={(page) => setUrl({ page })} />

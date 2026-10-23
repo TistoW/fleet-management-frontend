@@ -20,3 +20,21 @@ const UNKNOWN: StatusInfo = {
 export function statusInfo(raw: string | null | undefined): StatusInfo {
   return (raw && STATUS[raw]) || UNKNOWN
 }
+
+const OCCUPANCY: Record<string, string> = {
+  EMPTY: 'Kosong',
+  MANY_SEATS_AVAILABLE: 'Banyak kursi kosong',
+  FEW_SEATS_AVAILABLE: 'Sisa sedikit kursi',
+  STANDING_ROOM_ONLY: 'Hanya tempat berdiri',
+  CRUSHED_STANDING_ROOM_ONLY: 'Berdiri berdesakan',
+  FULL: 'Penuh',
+  NOT_ACCEPTING_PASSENGERS: 'Tidak menerima penumpang',
+}
+
+export function occupancyLabel(raw: string | null | undefined): string {
+  return (raw && OCCUPANCY[raw]) || 'Tidak ada data'
+}
+
+const ROUTE_TYPE = ['Kereta ringan', 'Kereta bawah tanah', 'Kereta komuter', 'Bus', 'Feri']
+
+export const routeTypeLabel = (t: number) => ROUTE_TYPE[t] ?? 'Lainnya'
