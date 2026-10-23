@@ -8,7 +8,7 @@ it('menampilkan judul aplikasi dan jumlah kendaraan', async () => {
       {
         id: 'y1',
         type: 'vehicle',
-        attributes: { label: '1841' },
+        attributes: { label: '1841', current_status: 'STOPPED_AT', latitude: 42.37, longitude: -71.12, updated_at: '2026-10-22T23:14:52-04:00' },
         relationships: {},
       },
     ],

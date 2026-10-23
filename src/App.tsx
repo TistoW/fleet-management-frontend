@@ -1,6 +1,7 @@
 import { Icon } from '@iconify/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { shouldRetry } from './api/errors'
+import VehicleGrid from './features/vehicles/VehicleGrid'
 import { useUrlState } from './hooks/useUrlState'
 import { useVehicles } from './hooks/useVehicles'
 
@@ -10,17 +11,16 @@ const queryClient = new QueryClient({
   },
 })
 
-// Daftar sementara berupa teks, diganti kartu di commit berikutnya.
 function VehicleList() {
-  const [url] = useUrlState()
+  const [url, setUrl] = useUrlState()
   const { data, isPending, isError } = useVehicles({ routes: url.routes, trips: url.trips })
 
   if (isPending) return <p className="text-ink-muted">Memuat kendaraan...</p>
   if (isError) return <p className="text-danger">Gagal memuat kendaraan.</p>
   return (
     <>
-      <p className="mb-3 text-sm text-ink-muted">{data.length} kendaraan</p>
-      <p className="font-mono text-sm tabular-nums">{data.map((v) => v.label).join(' ')}</p>
+      <p className="mb-4 text-sm text-ink-muted">{data.length} kendaraan</p>
+      <VehicleGrid vehicles={data} onOpen={(id) => setUrl({ vehicle: id })} />
     </>
   )
 }
