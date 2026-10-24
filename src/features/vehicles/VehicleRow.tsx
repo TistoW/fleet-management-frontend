@@ -36,11 +36,11 @@ export default function VehicleRow({ vehicle: v, onOpen, onShowOnMap, query = ''
           )}
         </span>
         <span className="flex min-w-0 items-center gap-2">
-          <span className={`inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md px-1.5 py-0.5 text-xs font-medium ${s.tone}`}>
+          <span title={`Status API: ${v.status ?? 'null'}`}
+            className={`inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md px-1.5 py-0.5 text-xs font-medium ${s.tone}`}>
             <Icon icon={s.icon} className="size-3.5" aria-hidden />
             {s.label}
           </span>
-          <span className="min-w-0 truncate font-mono text-[11px] text-ink-muted">{v.status ?? 'null'}</span>
         </span>
         <span className="truncate font-mono text-[11px] tabular-nums text-ink-muted">
           {formatCoord(v.lat)}, {formatCoord(v.lng)} ·{' '}

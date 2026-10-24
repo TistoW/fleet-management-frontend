@@ -197,6 +197,9 @@ export default function VehicleDetailModal({ id, preview, onClose, autoRefresh }
                           {d.carriages.map((c) => `${c.label}: ${occupancyLabel(c.occupancy_status)}`).join(', ')}
                         </Row>
                       )}
+                      <p className="pt-1 text-xs text-ink-muted">
+                        Kode status API: <span className="font-mono">{d.status ?? 'null'}</span>
+                      </p>
                     </>
                   ) : (
                     <SkeletonRows />

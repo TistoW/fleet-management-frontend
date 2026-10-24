@@ -2,7 +2,7 @@ import { Icon } from '@iconify/react'
 import type { VehicleView } from '../../api/vehicles'
 import Highlight from '../../components/Highlight'
 import StatusBadge from '../../components/StatusBadge'
-import { formatClockWib, formatCoord, formatRelative } from '../../lib/format'
+import { formatClockWib, formatCoord, formatRelativeShort } from '../../lib/format'
 import { statusInfo } from '../../lib/status'
 
 interface Props {
@@ -17,7 +17,7 @@ export default function VehicleCard({ vehicle: v, onOpen, onShowOnMap, query = '
   const route = v.route
   const aria = `Kendaraan ${v.label}${route ? `, ${route.name}` : ''}, ${statusInfo(v.status).label}`
   return (
-    <div className="group relative flex h-full flex-col gap-3 rounded-2xl border border-line bg-paper p-5 transition-[border-color,box-shadow] hover:border-accent/40 hover:shadow-sm has-[button:focus-visible]:ring-2 has-[button:focus-visible]:ring-accent">
+    <div className="group relative flex h-full flex-col gap-3.5 rounded-2xl border border-line bg-paper p-5 transition-[border-color,box-shadow] hover:border-accent/40 hover:shadow-sm has-[button:focus-visible]:ring-2 has-[button:focus-visible]:ring-accent">
       <div className="flex items-start justify-between gap-2">
         <button
           type="button"
@@ -48,8 +48,8 @@ export default function VehicleCard({ vehicle: v, onOpen, onShowOnMap, query = '
           <dd>{formatCoord(v.lng)}</dd>
         </div>
       </dl>
-      <p className="mt-auto border-t border-line pt-3 text-xs text-ink-muted">
-        {formatClockWib(v.updatedAt)} WIB · {formatRelative(v.updatedAt)}
+      <p className="mt-auto truncate whitespace-nowrap border-t border-line pt-3 text-xs text-ink-muted" title={`${formatClockWib(v.updatedAt)} WIB · ${formatRelativeShort(v.updatedAt)}`}>
+        {formatClockWib(v.updatedAt)} WIB · {formatRelativeShort(v.updatedAt)}
       </p>
       <div className="flex items-center gap-2">
         <span className="inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-1 whitespace-nowrap rounded-lg border border-line px-3 text-sm font-medium text-accent transition-colors group-hover:border-accent/40 group-hover:bg-accent-soft/50" aria-hidden>

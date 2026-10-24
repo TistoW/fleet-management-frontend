@@ -75,9 +75,15 @@ export default function MultiSelect({
 
   useEffect(() => {
     const t = setTimeout(() => {
-      setQuery(input.trim().toLowerCase())
-      setActive(0)
-      setAutoPages(0)
+      const next = input.trim().toLowerCase()
+      // Only a changed query resets the cursor; the mount-time tick must not undo an early ArrowDown.
+      setQuery((prev) => {
+        if (prev !== next) {
+          setActive(0)
+          setAutoPages(0)
+        }
+        return next
+      })
     }, 200)
     return () => clearTimeout(t)
   }, [input])

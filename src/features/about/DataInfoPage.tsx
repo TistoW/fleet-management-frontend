@@ -1,5 +1,6 @@
 import { Icon } from '@iconify/react'
 import type { ReactNode } from 'react'
+import { statusInfo } from '../../lib/status'
 
 function Block({ icon, title, children }: { icon: string; title: string; children: ReactNode }) {
   return (
@@ -25,6 +26,8 @@ const STACK: [string, string][] = [
   ['Solar (Iconify)', 'ikon yang dibundel, tanpa panggilan ke luar'],
   ['Vitest + Testing Library', 'tes unit dan komponen'],
 ]
+
+const STATUS_ROWS = (['IN_TRANSIT_TO', 'INCOMING_AT', 'STOPPED_AT'] as const).map((k) => [k, statusInfo(k).label] as const)
 
 export default function DataInfoPage() {
   return (
@@ -77,6 +80,31 @@ export default function DataInfoPage() {
           sekitar 2.000 trip per hari. Karena itu pilihan Trip baru aktif setelah ada Rute. Trip yang sedang dilalui kendaraan ditaruh paling atas
           di grup &quot;Sedang berjalan&quot;, dan melepas sebuah rute ikut melepas trip miliknya.
         </p>
+      </Block>
+
+      <Block icon="solar:stop-circle-linear" title="Arti status kendaraan">
+        <p>
+          MBTA mengirim status dalam bahasa Inggris. Di kartu dan daftar, aplikasi menampilkannya dalam bahasa Indonesia. Nilai asli muncul
+          sebagai tooltip pada lencana dan di baris &quot;Kode status API&quot; pada detail kendaraan.
+        </p>
+        <table className="w-full text-left">
+          <thead>
+            <tr className="border-b border-line text-ink-muted">
+              <th className="py-1.5 pr-4 font-medium">Nilai API</th>
+              <th className="py-1.5 font-medium">Ditampilkan sebagai</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-line/70">
+            {STATUS_ROWS.map(([k, label]) => (
+              <tr key={k}>
+                <td className="py-1.5 pr-4">
+                  <code className={code}>{k}</code>
+                </td>
+                <td className="py-1.5">{label}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </Block>
 
       <Block icon="solar:check-square-linear" title="Teknologi">
