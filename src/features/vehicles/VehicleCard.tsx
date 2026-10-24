@@ -11,7 +11,7 @@ export default function VehicleCard({ vehicle: v, onOpen }: { vehicle: VehicleVi
       type="button"
       onClick={() => onOpen(v.id)}
       aria-label={aria}
-      className="flex w-full flex-col gap-3 rounded-lg border border-line bg-paper p-4 text-left transition-shadow hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+      className="flex w-full flex-col gap-3 rounded-xl border border-line bg-paper p-4 text-left transition-colors hover:border-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
     >
       <div className="flex items-start justify-between gap-2">
         <span className="font-mono text-lg font-semibold tabular-nums">{v.label}</span>

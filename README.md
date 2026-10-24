@@ -68,7 +68,7 @@ Semua data diambil dengan `fetch` bawaan browser lewat satu fungsi bertipe, `api
 
 ### Tampilan
 
-React 19 dengan function component dan hooks, TypeScript strict, Tailwind CSS v4 dengan token warna sendiri di `src/index.css`, ikon Solar dari Iconify yang dibundel (tanpa permintaan ke api.iconify.design), font Plus Jakarta Sans self-host lewat Fontsource, dan peta Leaflet (react-leaflet) dengan tile OpenStreetMap. Tidak memakai UI kit. Dropdown multi-select ditulis sendiri mengikuti pola ARIA combobox dan listbox, dan popup memakai elemen native `<dialog>` supaya ESC, fokus, dan penguncian latar ditangani browser.
+React 19 dengan function component dan hooks, TypeScript strict, Tailwind CSS v4 dengan token warna sendiri di `src/index.css` (mengikuti tema panel Elsaku), ikon Solar dari Iconify yang dibundel (tanpa permintaan ke api.iconify.design), font Geist (sans dan mono) self-host lewat Fontsource, dan peta Leaflet (react-leaflet) dengan tile OpenStreetMap. Tidak memakai UI kit. Dropdown multi-select ditulis sendiri mengikuti pola ARIA combobox dan listbox, dan popup memakai elemen native `<dialog>` supaya ESC, fokus, dan penguncian latar ditangani browser.
 
 ### Pagination
 

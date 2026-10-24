@@ -3,7 +3,7 @@ const bar = 'rounded bg-line motion-safe:animate-pulse'
 /** Same shape as VehicleCard so the layout does not jump when data arrives. */
 export function VehicleCardSkeleton() {
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-line bg-paper p-4" aria-hidden>
+    <div className="flex flex-col gap-3 rounded-xl border border-line bg-paper p-4" aria-hidden>
       <div className="flex items-start justify-between">
         <div className={`${bar} h-7 w-16`} />
         <div className={`${bar} h-6 w-14`} />
