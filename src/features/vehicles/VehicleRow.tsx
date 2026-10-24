@@ -22,8 +22,8 @@ export default function VehicleRow({ vehicle: v, onOpen, onShowOnMap }: Props) {
         aria-label={aria}
         className="flex min-h-[76px] min-w-0 flex-1 flex-col justify-center gap-1 px-4 py-2.5 text-left transition-colors active:bg-ink/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent"
       >
-        <span className="flex items-center gap-2">
-          <span className="font-mono text-base font-semibold tabular-nums">{v.label}</span>
+        <span className="flex min-w-0 items-center gap-2">
+          <span className="shrink-0 font-mono text-base font-semibold tabular-nums">{v.label}</span>
           {route && (
             <span
               className="max-w-[9rem] truncate rounded-md px-1.5 py-0.5 text-xs font-semibold"
@@ -33,12 +33,12 @@ export default function VehicleRow({ vehicle: v, onOpen, onShowOnMap }: Props) {
             </span>
           )}
         </span>
-        <span className="flex items-center gap-2">
-          <span className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium ${s.tone}`}>
+        <span className="flex min-w-0 items-center gap-2">
+          <span className={`inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md px-1.5 py-0.5 text-xs font-medium ${s.tone}`}>
             <Icon icon={s.icon} className="size-3.5" aria-hidden />
             {s.label}
           </span>
-          <span className="font-mono text-[11px] text-ink-muted">{v.status ?? 'null'}</span>
+          <span className="min-w-0 truncate font-mono text-[11px] text-ink-muted">{v.status ?? 'null'}</span>
         </span>
         <span className="truncate font-mono text-[11px] tabular-nums text-ink-muted">
           {formatCoord(v.lat)}, {formatCoord(v.lng)} · {formatRelative(v.updatedAt)}

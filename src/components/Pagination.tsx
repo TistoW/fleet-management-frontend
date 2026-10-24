@@ -16,10 +16,10 @@ export default function Pagination({ page, pageCount, onPageChange }: Props) {
   const first = page <= 1
   const last = page >= pageCount
   return (
-    <nav aria-label="Navigasi halaman" className="flex flex-wrap items-center gap-3">
+    <nav aria-label="Navigasi halaman" className="flex items-center gap-3 max-md:order-2 md:flex-wrap">
       <p className="hidden text-sm text-ink-muted tabular-nums 2xl:block">Halaman {page} dari {pageCount}</p>
       <div className="flex items-center gap-1">
-        <button type="button" className={`${btn} ${idle} max-sm:hidden`} disabled={first} onClick={() => onPageChange(1)} aria-label="Halaman pertama">
+        <button type="button" className={`${btn} ${idle} max-lg:hidden`} disabled={first} onClick={() => onPageChange(1)} aria-label="Halaman pertama">
           <Icon icon="solar:double-alt-arrow-left-linear" className="size-4" aria-hidden />
         </button>
         <button type="button" className={`${btn} ${idle}`} disabled={first} onClick={() => onPageChange(page - 1)} aria-label="Sebelumnya">
@@ -51,7 +51,7 @@ export default function Pagination({ page, pageCount, onPageChange }: Props) {
           <span className="mr-1 hidden sm:inline">Berikutnya</span>
           <Icon icon="solar:alt-arrow-right-linear" className="size-4" aria-hidden />
         </button>
-        <button type="button" className={`${btn} ${idle} max-sm:hidden`} disabled={last} onClick={() => onPageChange(pageCount)} aria-label="Halaman terakhir">
+        <button type="button" className={`${btn} ${idle} max-lg:hidden`} disabled={last} onClick={() => onPageChange(pageCount)} aria-label="Halaman terakhir">
           <Icon icon="solar:double-alt-arrow-right-linear" className="size-4" aria-hidden />
         </button>
       </div>

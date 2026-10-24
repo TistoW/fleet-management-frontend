@@ -96,9 +96,9 @@ export default function VehiclesPage({ url, setUrl, fleet, sheetOpen, onSheetClo
           />
         </div>
         {data && (
-          <footer className="flex shrink-0 items-center justify-between gap-x-6 gap-y-2 border-t border-line bg-paper px-4 py-2.5 max-md:py-1.5 md:flex-wrap">
-            <div className="flex items-center gap-4 max-md:gap-2">
-              <p className="whitespace-nowrap text-sm text-ink-muted tabular-nums max-md:text-xs" aria-live="polite">
+          <footer className="flex shrink-0 items-center justify-between gap-x-6 gap-y-2 border-t border-line bg-paper px-4 py-2.5 max-md:grid max-md:h-14 max-md:grid-cols-[1fr_auto_1fr] max-md:gap-2 max-md:py-0 md:flex-wrap">
+            <div className="flex items-center gap-4 max-md:contents">
+              <p className="whitespace-nowrap text-sm text-ink-muted tabular-nums max-md:order-1 max-md:text-xs" aria-live="polite">
                 {mobile ? (result.total ? `${result.from}-${result.to} dari ${result.total}` : 'Tidak ada data') : rangeText(result.from, result.to, result.total)}
               </p>
               {showBars && <PageSizeSelect size={url.size} onChange={(size) => setUrl({ size, page: pageAfterSizeChange(result.from, size) })} />}

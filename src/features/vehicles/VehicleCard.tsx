@@ -49,23 +49,22 @@ export default function VehicleCard({ vehicle: v, onOpen, onShowOnMap }: Props) 
       <p className="mt-auto border-t border-line pt-3 text-xs text-ink-muted">
         {formatClockWib(v.updatedAt)} WIB · {formatRelative(v.updatedAt)}
       </p>
-      <div className="flex items-center justify-between gap-2">
-        {onShowOnMap && v.lat != null && v.lng != null ? (
+      <div className="flex items-center gap-2">
+        <span className="inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-1 whitespace-nowrap rounded-lg border border-line px-3 text-sm font-medium text-accent transition-colors group-hover:border-accent/40 group-hover:bg-accent-soft/50" aria-hidden>
+          Lihat detail
+          <Icon icon="solar:alt-arrow-right-linear" className="size-4 shrink-0 transition-transform group-hover:translate-x-0.5" />
+        </span>
+        {onShowOnMap && v.lat != null && v.lng != null && (
           <button
             type="button"
             onClick={() => onShowOnMap(v.id)}
-            className="relative z-10 inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-line px-3 text-sm font-medium hover:bg-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            aria-label="Lihat di peta"
+            title="Lihat di peta"
+            className="relative z-10 inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-line text-ink-muted hover:bg-canvas hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
-            <Icon icon="solar:map-point-wave-linear" className="size-4" aria-hidden />
-            Lihat di peta
+            <Icon icon="solar:map-point-wave-linear" className="size-5" aria-hidden />
           </button>
-        ) : (
-          <span />
         )}
-        <span className="inline-flex items-center gap-0.5 whitespace-nowrap text-sm font-medium text-accent" aria-hidden>
-          Lihat detail
-          <Icon icon="solar:alt-arrow-right-linear" className="size-4 transition-transform group-hover:translate-x-0.5" />
-        </span>
       </div>
     </div>
   )
