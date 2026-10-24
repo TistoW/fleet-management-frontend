@@ -254,7 +254,7 @@ export default function MultiSelect({
       )}
 
       {open && (
-        <div className="absolute left-0 right-0 z-20 mt-1 rounded-xl border border-line bg-paper shadow-lg">
+        <div className="absolute left-0 right-0 z-50 mt-1 rounded-xl border border-line bg-paper shadow-lg">
           <div className="relative border-b border-line p-2">
             <Icon
               icon="solar:magnifer-linear"

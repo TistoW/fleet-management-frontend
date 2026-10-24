@@ -107,12 +107,12 @@ export default function FleetMapPage({ url, setUrl, fleet, sheetOpen, onSheetClo
         <button
           type="button"
           onClick={onOpenFilters}
-          className="absolute left-3 top-3 z-[500] inline-flex h-12 items-center gap-2 rounded-full bg-paper px-4 text-sm font-medium shadow-md active:bg-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent md:hidden"
+          className="absolute left-3 top-3 z-10 inline-flex h-12 items-center gap-2 rounded-full bg-paper px-4 text-sm font-medium shadow-md active:bg-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent md:hidden"
         >
           <Icon icon="solar:filter-linear" className="size-5" aria-hidden />
           Filter{hasFilters ? ` · ${url.routes.length + url.trips.length + (url.status ? 1 : 0)}` : ''}
         </button>
-        <div className="pointer-events-none absolute bottom-8 left-3 z-[500]">
+        <div className="pointer-events-none absolute bottom-8 left-3 z-10">
           <div className="pointer-events-auto max-h-48 w-auto sm:w-56 overflow-y-auto rounded-xl border border-line bg-paper/95 p-3 text-sm shadow-sm">
             <p className="flex items-center gap-2 font-semibold tabular-nums">
               <Icon icon="solar:bus-linear" className="size-4 text-accent" aria-hidden />

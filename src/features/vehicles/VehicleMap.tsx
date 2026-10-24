@@ -49,7 +49,7 @@ export default function VehicleMap({ lat, lng, bearing, color, textColor, label,
   const icon = useMemo(() => vehicleIcon(color, textColor, bearing), [color, textColor, bearing])
 
   return (
-    <div className="relative h-full min-h-64 overflow-hidden rounded-lg border border-line">
+    <div className="relative isolate z-0 h-full min-h-64 overflow-hidden rounded-lg border border-line">
       <MapContainer center={[lat, lng]} zoom={15} scrollWheelZoom={false} className="h-full min-h-64 w-full">
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
