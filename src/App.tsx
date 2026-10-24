@@ -1,10 +1,15 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { lazy, Suspense } from 'react'
 import { shouldRetry } from './api/errors'
+import Spinner from './components/Spinner'
 import VehicleDetailModal from './features/vehicles/VehicleDetailModal'
 import VehiclesPage from './features/vehicles/VehiclesPage'
 import { useFleet } from './hooks/useFleet'
 import { buildSearch, type View } from './hooks/useUrlState'
 import AppShell from './layout/AppShell'
+
+// Leaflet stays out of the first load: the map view is its own chunk.
+const FleetMapPage = lazy(() => import('./features/map/FleetMapPage'))
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -25,7 +30,16 @@ function Dashboard() {
       onNavigate={(view) => setUrl({ view })}
       live={{ updatedAt: dataUpdatedAt, auto, onAuto: setAuto, isFetching, onRefresh: () => void refetch() }}
     >
-      <VehiclesPage {...pageProps} />
+      <Suspense
+        fallback={
+          <div role="status" aria-label="Memuat halaman" className="flex flex-1 items-center justify-center">
+            <Spinner className="size-6 text-ink-muted" />
+          </div>
+        }
+      >
+        {url.view === 'kendaraan' && <VehiclesPage {...pageProps} />}
+        {url.view === 'peta' && <FleetMapPage {...pageProps} />}
+      </Suspense>
       {url.vehicle && (
         <VehicleDetailModal
           id={url.vehicle}

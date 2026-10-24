@@ -6,6 +6,7 @@ import { formatClockWib } from '../lib/format'
 
 const NAV: { view: View; label: string; icon: string; group: string }[] = [
   { view: 'kendaraan', label: 'Kendaraan', icon: 'solar:bus-bold', group: 'Pantau' },
+  { view: 'peta', label: 'Peta Armada', icon: 'solar:map-bold', group: 'Pantau' },
 ]
 
 export interface Live {

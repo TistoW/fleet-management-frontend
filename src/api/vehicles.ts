@@ -12,6 +12,7 @@ export interface VehicleView {
   lng: number | null
   updatedAt: string
   directionId: number | null
+  bearing: number | null
   occupancy: string | null
   routeId: string | null
   tripId: string | null
@@ -50,6 +51,7 @@ function toView(v: Vehicle, route?: Route): VehicleView {
     lng: a.longitude,
     updatedAt: a.updated_at,
     directionId: a.direction_id,
+    bearing: a.bearing ?? null,
     occupancy: a.occupancy_status,
     routeId: relId(v, 'route'),
     tripId: relId(v, 'trip'),
@@ -70,7 +72,7 @@ export async function fetchVehicles(
       include: 'route',
       sort: 'label',
       'fields[vehicle]':
-        'label,current_status,latitude,longitude,updated_at,direction_id,occupancy_status',
+        'label,current_status,latitude,longitude,updated_at,direction_id,occupancy_status,bearing',
       'fields[route]': 'short_name,long_name,color,text_color,type',
     },
     signal,
@@ -93,7 +95,6 @@ export async function fetchVehicleDetail(id: string, signal?: AbortSignal): Prom
   return {
     ...toView(v, route),
     speed: v.attributes.speed,
-    bearing: v.attributes.bearing,
     stopId: relId(v, 'stop'),
     carriages: v.attributes.carriages,
     trip: trip && toTripView(trip),
