@@ -1,3 +1,5 @@
+import { getSimulation } from './simulate'
+
 /** Reverse geocoding for the detail popup only: Photon first, Nominatim as fallback (both OpenStreetMap data). */
 
 interface PhotonDoc {
@@ -25,6 +27,7 @@ export function fromNominatim(doc: NominatimDoc): string | null {
 }
 
 async function getJson<T>(url: string, signal?: AbortSignal, headers?: Record<string, string>): Promise<T> {
+  if (getSimulation() === 'geocode-fail') throw new Error('503')
   const res = await fetch(url, { signal, headers })
   if (!res.ok) throw new Error(String(res.status))
   return (await res.json()) as T

@@ -36,6 +36,14 @@ import questionCircleLinear from '@iconify-icons/solar/question-circle-linear'
 import filterLinear from '@iconify-icons/solar/filter-linear'
 import menuDotsBold from '@iconify-icons/solar/menu-dots-bold'
 import arrowLeftLinear from '@iconify-icons/solar/arrow-left-linear'
+import bugLinear from '@iconify-icons/solar/bug-linear'
+import wiFiCrossLinear from '@iconify-icons/solar/wi-fi-cross-linear'
+import wiFiLowLinear from '@iconify-icons/solar/wi-fi-low-linear'
+import hourglassLinear from '@iconify-icons/solar/hourglass-linear'
+import serverLinear from '@iconify-icons/solar/server-linear'
+import forbiddenCircleLinear from '@iconify-icons/solar/forbidden-circle-linear'
+import inboxLinear from '@iconify-icons/solar/inbox-linear'
+import mapPointRemoveLinear from '@iconify-icons/solar/map-point-remove-linear'
 
 // Registered up front so no icon is fetched from api.iconify.design at runtime.
 const icons = {
@@ -76,6 +84,14 @@ const icons = {
   'solar:filter-linear': filterLinear,
   'solar:menu-dots-bold': menuDotsBold,
   'solar:arrow-left-linear': arrowLeftLinear,
+  'solar:bug-linear': bugLinear,
+  'solar:wi-fi-cross-linear': wiFiCrossLinear,
+  'solar:wi-fi-low-linear': wiFiLowLinear,
+  'solar:hourglass-linear': hourglassLinear,
+  'solar:server-linear': serverLinear,
+  'solar:forbidden-circle-linear': forbiddenCircleLinear,
+  'solar:inbox-linear': inboxLinear,
+  'solar:map-point-remove-linear': mapPointRemoveLinear,
 }
 
 for (const [name, data] of Object.entries(icons)) addIcon(name, data)

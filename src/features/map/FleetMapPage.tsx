@@ -12,11 +12,16 @@ import type { UrlState } from '../../hooks/useUrlState'
 import { applyStatus, fleetStats } from '../../lib/fleetStats'
 import { applySearch } from '../../lib/search'
 import { statusInfo } from '../../lib/status'
+import { mapGate } from '../../api/simulate'
 import ProviderMap from './ProviderMap'
 import VehicleFilters from '../vehicles/VehicleFilters'
 
 // Leaflet only loads when this view opens.
-const loadMap = () => lazy(() => import('./FleetMap'))
+const loadMap = () =>
+  lazy(async () => {
+    await mapGate()
+    return import('./FleetMap')
+  })
 
 const GoogleFleet = lazy(() => import('./GoogleFleetMap'))
 

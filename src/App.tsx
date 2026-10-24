@@ -11,6 +11,7 @@ import AppShell from './layout/AppShell'
 // Each secondary view is its own chunk: Leaflet stays out of the first load.
 const FleetMapPage = lazy(() => import('./features/map/FleetMapPage'))
 const DataInfoPage = lazy(() => import('./features/about/DataInfoPage'))
+const SimulationPage = lazy(() => import('./features/simulate/SimulationPage'))
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -24,6 +25,7 @@ function Dashboard() {
   const hrefFor = (view: View) => buildSearch({ ...url, view, vehicle: null }) || window.location.pathname
   const [sheet, setSheet] = useState(false)
   const pageProps = { url, setUrl, fleet, sheetOpen: sheet, onSheetClose: () => setSheet(false), onOpenFilters: () => setSheet(true) }
+  const plain = url.view === 'data' || url.view === 'simulasi'
   const filterCount = url.routes.length + url.trips.length + (url.status ? 1 : 0)
 
   return (
@@ -34,10 +36,10 @@ function Dashboard() {
         setSheet(false)
         setUrl({ view })
       }}
-      search={url.view === 'data' ? undefined : { value: url.q, onChange: (q) => setUrl({ q }) }}
-      filter={url.view === 'data' ? undefined : { count: filterCount, onOpen: () => setSheet(true) }}
+      search={plain ? undefined : { value: url.q, onChange: (q) => setUrl({ q }) }}
+      filter={plain ? undefined : { count: filterCount, onOpen: () => setSheet(true) }}
       live={
-        url.view === 'data'
+        plain
           ? undefined
           : { updatedAt: dataUpdatedAt, auto, onAuto: setAuto, isFetching, onRefresh: () => void refetch() }
       }
@@ -51,9 +53,10 @@ function Dashboard() {
       >
         {url.view === 'kendaraan' && <VehiclesPage {...pageProps} />}
         {url.view === 'peta' && <FleetMapPage {...pageProps} />}
-        {url.view === 'data' && <DataInfoPage />}
+        {url.view === 'data' && <DataInfoPage simulation={{ href: hrefFor('simulasi'), onOpen: () => setUrl({ view: 'simulasi' }) }} />}
+        {url.view === 'simulasi' && <SimulationPage setUrl={setUrl} />}
       </Suspense>
-      {url.vehicle && url.view !== 'data' && (
+      {url.vehicle && !plain && (
         <VehicleDetailModal
           id={url.vehicle}
           preview={data?.find((x) => x.id === url.vehicle)}

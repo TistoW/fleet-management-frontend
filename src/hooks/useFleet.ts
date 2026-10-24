@@ -14,7 +14,7 @@ export type { UrlState, View }
 export function useFleet() {
   const [url, setUrl] = useUrlState()
   const [auto, setAuto] = useState(true)
-  const q = useVehicles({ routes: url.routes, trips: url.trips }, auto, url.view !== 'data')
+  const q = useVehicles({ routes: url.routes, trips: url.trips }, auto, url.view !== 'data' && url.view !== 'simulasi')
   const countdown = useRateLimitRetry(q.error, () => void q.refetch())
   return { url, setUrl, auto, setAuto, fleet: { ...q, countdown } }
 }

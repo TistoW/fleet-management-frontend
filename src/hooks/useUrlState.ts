@@ -1,9 +1,10 @@
 import { useCallback, useSyncExternalStore } from 'react'
+import { parseSimulation, type SimMode } from '../api/simulate'
 
 export const PAGE_SIZES = [5, 10, 20, 50] as const
 const DEFAULT_SIZE = 10
 
-export const VIEWS = ['kendaraan', 'peta', 'data'] as const
+export const VIEWS = ['kendaraan', 'peta', 'data', 'simulasi'] as const
 export type View = (typeof VIEWS)[number]
 
 export const STATUS_FILTERS = ['berjalan', 'berhenti', 'basi'] as const
@@ -22,6 +23,8 @@ export interface UrlState {
   /** Free-text search over label, id, route and destination. */
   q: string
   view: View
+  /** Demo failure mode (?simulate=), see api/simulate.ts. */
+  simulate: SimMode | null
 }
 
 const list = (v: string | null) => (v ? v.split(',').filter(Boolean) : [])
@@ -40,6 +43,7 @@ export function parseUrlState(search: string): UrlState {
     focus: p.get('focus') || null,
     q: p.get('q') ?? '',
     view: (VIEWS as readonly string[]).includes(p.get('view') ?? '') ? (p.get('view') as View) : 'kendaraan',
+    simulate: parseSimulation(search),
   }
 }
 
@@ -55,6 +59,7 @@ export function buildSearch(s: UrlState): string {
   if (s.focus) p.set('focus', s.focus)
   if (s.q) p.set('q', s.q)
   if (s.view !== 'kendaraan') p.set('view', s.view)
+  if (s.simulate) p.set('simulate', s.simulate)
   const q = p.toString()
   return q ? `?${q}` : ''
 }

@@ -1,6 +1,7 @@
 import { Icon } from '@iconify/react'
 import { lazy, Suspense, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react'
 import { ApiError } from '../../api/errors'
+import { mapGate } from '../../api/simulate'
 import type { VehicleView } from '../../api/vehicles'
 import ErrorBoundary from '../../components/ErrorBoundary'
 import ErrorState from '../../components/ErrorState'
@@ -17,7 +18,11 @@ import ProviderMap from '../map/ProviderMap'
 import { occupancyLabel, routeTypeLabel, statusInfo } from '../../lib/status'
 
 // Leaflet (~150 KB) only loads when a popup opens.
-const loadMap = () => lazy(() => import('./VehicleMap'))
+const loadMap = () =>
+  lazy(async () => {
+    await mapGate()
+    return import('./VehicleMap')
+  })
 // The Google chunk and its script load only after the user switches to Google.
 const GoogleVehicle = lazy(() => import('../map/GoogleVehicleMap'))
 
@@ -174,6 +179,11 @@ export default function VehicleDetailModal({ id, preview, onClose, autoRefresh }
                           OpenStreetMap
                         </a>
                       </span>
+                    </Row>
+                  )}
+                  {street.isSuccess && !street.data && (
+                    <Row label="Lokasi">
+                      <span className="text-ink-muted">Nama jalan belum bisa dimuat. Koordinat di atas tetap akurat.</span>
                     </Row>
                   )}
                   <Row label="Diperbarui">

@@ -1,4 +1,5 @@
 import type { JsonApiError } from '../types/mbta'
+import { getSimulation } from './simulate'
 
 export class ApiError extends Error {
   kind: 'network' | 'http'
@@ -83,6 +84,8 @@ export function describeError(err: unknown): ErrorInfo {
 
 /** TanStack Query `retry`: network and 5xx twice, 429 once, other 4xx never. */
 export function shouldRetry(failureCount: number, err: unknown): boolean {
+  // Simulated failures are deterministic, retrying would only delay the message.
+  if (getSimulation()) return false
   if (!(err instanceof ApiError)) return failureCount < 2
   if (err.kind === 'network' || err.status >= 500) return failureCount < 2
   if (err.status === 429) return failureCount < 1

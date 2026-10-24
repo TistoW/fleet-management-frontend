@@ -13,8 +13,9 @@ it('membaca parameter dan memakai nilai bawaan', () => {
     focus: null,
     q: '',
     view: 'kendaraan',
+    simulate: null,
   })
-  expect(parseUrlState('')).toEqual({ routes: [], trips: [], page: 1, size: 10, vehicle: null, status: null, focus: null, q: '', view: 'kendaraan' })
+  expect(parseUrlState('')).toEqual({ routes: [], trips: [], page: 1, size: 10, vehicle: null, status: null, focus: null, q: '', view: 'kendaraan', simulate: null })
 })
 
 it('menolak page dan size yang tidak valid', () => {

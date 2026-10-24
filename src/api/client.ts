@@ -1,4 +1,5 @@
 import { ApiError } from './errors'
+import { simulatedFetch } from './simulate'
 import type { JsonApiDoc, JsonApiError } from '../types/mbta'
 
 const BASE_URL = 'https://api-v3.mbta.com'
@@ -21,7 +22,7 @@ export async function apiGet<T>(
 
   let res: Response
   try {
-    res = await fetch(url, { headers, signal })
+    res = (await simulatedFetch(url.pathname, signal)) ?? (await fetch(url, { headers, signal }))
   } catch (err) {
     if (err instanceof DOMException && err.name === 'AbortError') throw err
     throw new ApiError('network')

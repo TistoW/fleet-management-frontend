@@ -30,7 +30,7 @@ const STACK: [string, string][] = [
 
 const STATUS_ROWS = (['IN_TRANSIT_TO', 'INCOMING_AT', 'STOPPED_AT'] as const).map((k) => [k, statusInfo(k).label] as const)
 
-export default function DataInfoPage() {
+export default function DataInfoPage({ simulation }: { simulation?: { href: string; onOpen: () => void } }) {
   return (
     <div className="max-w-5xl">
       <p className="mb-4 text-sm text-ink-muted">
@@ -128,6 +128,26 @@ export default function DataInfoPage() {
           <code className={code}>/predictions</code>, dengan <code className={code}>/schedules</code> sebagai cadangan berlabel &quot;Jadwal&quot;. Prediksi diperbarui tiap 30 detik
           hanya selama popup terbuka; bila gagal, garis dan daftar halte tidak ditampilkan.
         </p>
+      </Block>
+
+      <Block icon="solar:bug-linear" title="Simulasi kendala">
+        <p>
+          Pesan error di aplikasi ini bisa dilihat tanpa harus menunggu MBTA benar-benar bermasalah. Halaman Simulasi Kendala menyalakan satu skenario
+          (koneksi putus, batas permintaan, server gangguan, kendaraan hilang, data kosong, peta atau nama jalan gagal) hanya untuk tab ini, ditandai
+          bilah kuning di atas halaman. Tautan seperti <code className={code}>?simulate=rate-limit</code> langsung menyalakannya.
+        </p>
+        {simulation && (
+          <a
+            href={simulation.href}
+            onClick={(e) => {
+              e.preventDefault()
+              simulation.onOpen()
+            }}
+            className="inline-flex h-10 items-center rounded-xl border border-line bg-paper px-4 font-medium text-ink hover:bg-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          >
+            Buka Simulasi Kendala
+          </a>
+        )}
       </Block>
 
       <Block icon="solar:check-square-linear" title="Teknologi">

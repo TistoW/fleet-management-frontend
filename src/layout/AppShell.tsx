@@ -5,12 +5,14 @@ import { useIsMobile } from '../hooks/useIsMobile'
 import SearchField from '../components/SearchField'
 import Spinner from '../components/Spinner'
 import type { View } from '../hooks/useUrlState'
+import SimulationBanner from '../components/SimulationBanner'
 import { formatClockWib } from '../lib/format'
 
-const NAV: { view: View; label: string; short: string; icon: string; group: string }[] = [
+const NAV: { view: View; label: string; short: string; icon: string; group: string; bottom?: false }[] = [
   { view: 'kendaraan', label: 'Kendaraan', short: 'Kendaraan', icon: 'solar:bus-linear', group: 'Pantau' },
   { view: 'peta', label: 'Peta Armada', short: 'Peta', icon: 'solar:map-point-wave-linear', group: 'Pantau' },
   { view: 'data', label: 'Tentang Data', short: 'Info', icon: 'solar:database-linear', group: 'Info' },
+  { view: 'simulasi', label: 'Simulasi Kendala', short: 'Simulasi', icon: 'solar:bug-linear', group: 'Info', bottom: false },
 ]
 
 export interface Live {
@@ -173,9 +175,10 @@ export default function AppShell({ view, hrefFor, onNavigate, live, search, filt
             </div>
           )}
         </header>
+        <SimulationBanner />
         <main id="konten" tabIndex={-1} className="min-h-0 flex-1 overflow-y-auto outline-none">
           <div
-            className={`mx-auto flex max-w-7xl flex-col px-4 py-5 sm:px-6 ${view === 'data' ? 'min-h-full' : 'h-full'} ${
+            className={`mx-auto flex max-w-7xl flex-col px-4 py-5 sm:px-6 ${view === 'data' || view === 'simulasi' ? 'min-h-full' : 'h-full'} ${
               view === 'peta' ? 'max-md:p-0' : 'max-md:pb-0 max-md:pt-3'
             }`}
           >
@@ -186,8 +189,9 @@ export default function AppShell({ view, hrefFor, onNavigate, live, search, filt
           aria-label="Menu bawah"
           className="flex shrink-0 border-t border-line bg-paper pb-[env(safe-area-inset-bottom)] shadow-[0_-2px_8px_rgba(0,0,0,.05)] md:hidden"
         >
-          {NAV.map((n) => {
-            const active = n.view === view
+          {NAV.filter((n) => n.bottom !== false).map((n) => {
+            // The simulation page lives under the Info tab on phones.
+            const active = n.view === view || (n.view === 'data' && view === 'simulasi')
             return (
               <a
                 key={n.view}
@@ -209,7 +213,17 @@ export default function AppShell({ view, hrefFor, onNavigate, live, search, filt
           })}
         </nav>
       </div>
-      {options && live && <OptionsSheet {...live} onClose={() => setOptions(false)} />}
+      {options && live && (
+        <OptionsSheet
+          {...live}
+          simHref={hrefFor('simulasi')}
+          onSim={() => {
+            setOptions(false)
+            onNavigate('simulasi')
+          }}
+          onClose={() => setOptions(false)}
+        />
+      )}
     </div>
   )
 }
@@ -235,7 +249,7 @@ function IconButton({ label, icon, onClick, badge, spin }: { label: string; icon
   )
 }
 
-function OptionsSheet({ updatedAt, auto, onAuto, onClose }: Live & { onClose: () => void }) {
+function OptionsSheet({ updatedAt, auto, onAuto, onClose, simHref, onSim }: Live & { onClose: () => void; simHref: string; onSim: () => void }) {
   return (
     <BottomSheet title="Pembaruan data" onClose={onClose}>
       <p className="mb-2 text-sm text-ink-muted tabular-nums">
@@ -245,6 +259,17 @@ function OptionsSheet({ updatedAt, auto, onAuto, onClose }: Live & { onClose: ()
         Otomatis tiap 30 detik
         <input type="checkbox" checked={auto} onChange={(e) => onAuto(e.target.checked)} className="size-6 accent-accent" />
       </label>
+      <a
+        href={simHref}
+        onClick={(e) => {
+          e.preventDefault()
+          onSim()
+        }}
+        className="mt-1 flex min-h-12 items-center gap-3 border-t border-line pt-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+      >
+        <Icon icon="solar:bug-linear" className="size-5 text-ink-muted" aria-hidden />
+        Simulasi kendala
+      </a>
     </BottomSheet>
   )
 }

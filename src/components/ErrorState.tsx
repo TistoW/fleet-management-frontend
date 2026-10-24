@@ -2,7 +2,8 @@ import { Icon } from '@iconify/react'
 import { useEffect, useState } from 'react'
 import { ApiError, describeError, secondsToNextMinute } from '../api/errors'
 
-export default function ErrorState({ error, onRetry }: { error: unknown; onRetry: () => void }) {
+/** `preview` draws the same message as a quiet card (no alert role, no button) for the simulation page. */
+export default function ErrorState({ error, onRetry, preview }: { error: unknown; onRetry?: () => void; preview?: boolean }) {
   const info = describeError(error)
   const limited = error instanceof ApiError && error.status === 429
   const [seconds, setSeconds] = useState(secondsToNextMinute)
@@ -14,7 +15,7 @@ export default function ErrorState({ error, onRetry }: { error: unknown; onRetry
   }, [limited])
 
   return (
-    <div role="alert" className="flex flex-col items-start gap-3 m-4 rounded-2xl border border-line bg-paper p-8">
+    <div role={preview ? undefined : 'alert'} className={`flex flex-col items-start gap-3 rounded-2xl border border-line bg-paper ${preview ? 'p-4' : 'm-4 p-8'}`}>
       <Icon icon="solar:danger-triangle-bold-duotone" className="size-10 text-danger" aria-hidden />
       <div>
         <h2 className="font-semibold">{info.title}</h2>
@@ -22,6 +23,7 @@ export default function ErrorState({ error, onRetry }: { error: unknown; onRetry
         {limited && <p className="mt-1 text-sm text-ink-muted">Coba lagi dalam ±{seconds} detik.</p>}
         {info.technical && <p className="mt-2 font-mono text-xs text-ink-muted">{info.technical}</p>}
       </div>
+      {!preview && onRetry && (
       <button
         type="button"
         onClick={onRetry}
@@ -29,6 +31,7 @@ export default function ErrorState({ error, onRetry }: { error: unknown; onRetry
       >
         {info.action}
       </button>
+      )}
     </div>
   )
 }
