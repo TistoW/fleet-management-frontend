@@ -38,13 +38,25 @@ export default function VehicleCard({ vehicle: v, onOpen, onShowOnMap, query = '
         )}
       </div>
       <StatusBadge status={v.status} />
-      <dl className="grid grid-cols-2 gap-2 font-mono text-sm tabular-nums">
-        <div>
-          <dt className="font-sans text-xs text-ink-muted">Lat</dt>
+      <p className="flex items-start gap-1.5 text-sm font-medium" title={v.stopName ?? undefined}>
+        <Icon icon="solar:map-point-wave-linear" className="mt-0.5 size-4 shrink-0 text-accent" aria-hidden />
+        <span className={`min-w-0 ${v.stopName ? 'truncate' : 'text-ink-muted'}`}>
+          {v.stopName ? (
+            <>
+              Dekat: <Highlight text={v.stopName} query={query} />
+            </>
+          ) : (
+            'Halte tidak diketahui'
+          )}
+        </span>
+      </p>
+      <dl className="-mt-1.5 flex gap-4 font-mono text-xs tabular-nums text-ink-muted">
+        <div className="flex gap-1">
+          <dt className="font-sans">Lat</dt>
           <dd>{formatCoord(v.lat)}</dd>
         </div>
-        <div>
-          <dt className="font-sans text-xs text-ink-muted">Lng</dt>
+        <div className="flex gap-1">
+          <dt className="font-sans">Lng</dt>
           <dd>{formatCoord(v.lng)}</dd>
         </div>
       </dl>

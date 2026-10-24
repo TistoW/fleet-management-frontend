@@ -91,3 +91,17 @@ it('Esc mengosongkan pencarian dan "/" memfokuskannya', async () => {
   expect(await screen.findByText('Menampilkan 1-4 dari 4 kendaraan')).toBeInTheDocument()
   expect(box).toHaveValue('')
 })
+
+it('shows the nearest stop on the card, and finds the vehicle by stop name', async () => {
+  window.history.replaceState(null, '', '/?q=harvard')
+  render(<App />)
+  expect(await screen.findByText('Menampilkan 1-1 dari 1 kendaraan')).toBeInTheDocument()
+  expect(screen.getByText(/Dekat:/)).toHaveTextContent('Dekat: Harvard')
+  window.history.replaceState(null, '', '/')
+})
+
+it('says so when the stop is unknown', async () => {
+  window.history.replaceState(null, '', '/?q=2002')
+  render(<App />)
+  expect(await screen.findByText('Halte tidak diketahui')).toBeInTheDocument()
+})

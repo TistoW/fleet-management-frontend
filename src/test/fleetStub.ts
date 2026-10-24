@@ -4,7 +4,7 @@ const vehicle = (id: string, label: string, lat: number | null, lng: number | nu
   id,
   type: 'vehicle',
   attributes: { label, current_status: status, latitude: lat, longitude: lng, bearing: 90, direction_id: 0, occupancy_status: null, updated_at: '2026-10-22T23:14:52-04:00', carriages: [] },
-  relationships: { route: { data: { id: route, type: 'route' } }, ...(trip ? { trip: { data: { id: trip, type: 'trip' } } } : {}) },
+  relationships: { route: { data: { id: route, type: 'route' } }, ...(trip ? { trip: { data: { id: trip, type: 'trip' } }, stop: { data: { id: 's1', type: 'stop' } } } : {}) },
 })
 
 export const routeRed = { id: 'Red', type: 'route', attributes: { short_name: 'RL', long_name: 'Red Line', color: 'DA291C', text_color: 'FFFFFF', type: 1, direction_names: ['South', 'North'], description: 'Rapid Transit' } }
@@ -23,7 +23,7 @@ export const mixedFleetDoc = {
     vehicle('m3', '2003', 42.39, -71.09, 'Red', 'STOPPED_AT'),
     vehicle('m4', '2004', 42.4, -71.08, 'Red'),
   ],
-  included: [routeRed, { id: 't1', type: 'trip', attributes: { headsign: 'Alewife' } }],
+  included: [routeRed, { id: 't1', type: 'trip', attributes: { headsign: 'Alewife' } }, { id: 's1', type: 'stop', attributes: { name: 'Harvard' } }],
 }
 
 export function stubFleetFetch(doc: { data: { id: string }[]; included: unknown[] } = fleetDoc) {

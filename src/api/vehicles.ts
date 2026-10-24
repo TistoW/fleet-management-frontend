@@ -18,6 +18,8 @@ export interface VehicleView {
   tripId: string | null
   /** Destination of the current trip, when the list request included it. */
   headsign?: string | null
+  /** Stop the vehicle is at or heading to, from the same list request. */
+  stopName?: string | null
   route?: RouteView
 }
 
@@ -43,7 +45,7 @@ export interface VehicleFilter {
   trips?: string[]
 }
 
-function toView(v: Vehicle, route?: Route, trip?: Trip): VehicleView {
+function toView(v: Vehicle, route?: Route, trip?: Trip, stop?: Stop): VehicleView {
   const a = v.attributes
   return {
     id: v.id,
@@ -58,6 +60,7 @@ function toView(v: Vehicle, route?: Route, trip?: Trip): VehicleView {
     routeId: relId(v, 'route'),
     tripId: relId(v, 'trip'),
     headsign: trip?.attributes.headsign || null,
+    stopName: stop?.attributes.name || null,
     route: route && toRouteView(route),
   }
 }
@@ -72,18 +75,19 @@ export async function fetchVehicles(
     {
       'filter[route]': filter.routes?.join(','),
       'filter[trip]': filter.trips?.join(','),
-      include: 'route,trip',
+      include: 'route,trip,stop',
       sort: 'label',
       'fields[vehicle]':
         'label,current_status,latitude,longitude,updated_at,direction_id,occupancy_status,bearing',
       'fields[route]': 'short_name,long_name,color,text_color,type',
       'fields[trip]': 'headsign',
+      'fields[stop]': 'name',
     },
     signal,
   )
   const index = indexIncluded(doc.included)
   return doc.data.map((v) =>
-    toView(v, pickIncluded<Route['attributes']>(index, 'route', relId(v, 'route')), pickIncluded<Trip['attributes']>(index, 'trip', relId(v, 'trip'))),
+    toView(v, pickIncluded<Route['attributes']>(index, 'route', relId(v, 'route')), pickIncluded<Trip['attributes']>(index, 'trip', relId(v, 'trip')), pickIncluded<Stop['attributes']>(index, 'stop', relId(v, 'stop'))),
   )
 }
 

@@ -1,7 +1,7 @@
 import { Icon } from '@iconify/react'
 import type { VehicleView } from '../../api/vehicles'
 import Highlight from '../../components/Highlight'
-import { formatCoord, formatRelative, formatRelativeShort } from '../../lib/format'
+import { formatRelative, formatRelativeShort } from '../../lib/format'
 import { statusInfo } from '../../lib/status'
 
 interface Props {
@@ -42,10 +42,13 @@ export default function VehicleRow({ vehicle: v, onOpen, onShowOnMap, query = ''
             {s.label}
           </span>
         </span>
-        <span className="truncate font-mono text-[11px] tabular-nums text-ink-muted">
-          {formatCoord(v.lat)}, {formatCoord(v.lng)} ·{' '}
-          <span className="min-[400px]:hidden">{formatRelativeShort(v.updatedAt)}</span>
-          <span className="max-[399px]:hidden">{formatRelative(v.updatedAt)}</span>
+        <span className="flex min-w-0 items-center gap-1 text-xs text-ink-muted">
+          <Icon icon="solar:map-point-wave-linear" className="size-3.5 shrink-0" aria-hidden />
+          <span className="min-w-0 truncate">{v.stopName ? <>Dekat: <Highlight text={v.stopName} query={query} /></> : 'Halte tidak diketahui'}</span>
+          <span className="shrink-0 tabular-nums">
+            · <span className="min-[400px]:hidden">{formatRelativeShort(v.updatedAt)}</span>
+            <span className="max-[399px]:hidden">{formatRelative(v.updatedAt)}</span>
+          </span>
         </span>
       </button>
       {onShowOnMap && v.lat != null && v.lng != null && (
