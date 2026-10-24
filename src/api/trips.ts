@@ -61,3 +61,26 @@ export async function fetchTripsByIds(ids: string[], signal?: AbortSignal): Prom
   )
   return doc.data.map(toTripView)
 }
+
+/** First-stop departure per trip id (ISO), one request for a whole trip page. Trips without a schedule are absent. */
+export async function fetchFirstDepartures(ids: string[], signal?: AbortSignal): Promise<Record<string, string>> {
+  if (!ids.length) return {}
+  const doc = await apiGet<
+    { attributes: { departure_time: string | null; arrival_time: string | null }; relationships: { trip?: { data?: { id: string } | null } } }[]
+  >(
+    '/schedules',
+    {
+      'filter[trip]': ids.join(','),
+      'filter[stop_sequence]': 'first',
+      'fields[schedule]': 'departure_time,arrival_time',
+    },
+    signal,
+  )
+  const out: Record<string, string> = {}
+  for (const s of doc.data) {
+    const id = s.relationships.trip?.data?.id
+    const t = s.attributes.departure_time ?? s.attributes.arrival_time
+    if (id && t) out[id] = t
+  }
+  return out
+}

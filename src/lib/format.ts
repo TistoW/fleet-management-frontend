@@ -39,3 +39,12 @@ export function formatRelativeShort(iso: string, now = Date.now()): string {
 export function formatCoord(n: number | null): string {
   return n === null ? '-' : n.toFixed(5)
 }
+
+const hm = new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: 'Asia/Jakarta' })
+
+/** "16:15" in WIB, or "" when the time is missing or invalid. */
+export function formatHmWib(iso: string | undefined): string {
+  if (!iso) return ''
+  const d = new Date(iso)
+  return Number.isNaN(d.getTime()) ? '' : hm.format(d).replace(/\./g, ':')
+}

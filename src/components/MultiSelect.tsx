@@ -10,6 +10,10 @@ export interface Option {
   swatch?: string
   /** Options with the same group are listed together under a heading. */
   group?: string
+  /** Short muted text next to the group heading. */
+  groupHint?: string
+  /** Lower-contrast row, still selectable. */
+  muted?: boolean
 }
 
 interface Props {
@@ -29,6 +33,8 @@ interface Props {
   isLoadingMore?: boolean
   onLoadMore?: () => void
   emptyText?: string
+  /** One line above the list, e.g. counts. */
+  summary?: string
   /** The page shows its own removable chips. */
   hideChips?: boolean
   /** Toolbar mode: no visible label or hint (aria-label and title carry them); wrapper classes via `className`. */
@@ -58,6 +64,7 @@ export default function MultiSelect({
   isLoadingMore,
   onLoadMore,
   emptyText = 'Tidak ada pilihan',
+  summary: summaryLine,
 }: Props) {
   const id = useId()
   const listId = `${id}-list`
@@ -277,6 +284,7 @@ export default function MultiSelect({
               className="h-9 w-full rounded-lg border border-line pl-8 pr-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             />
           </div>
+          {summaryLine && !isLoading && <p className="border-b border-line px-3 py-1.5 text-xs text-ink-muted">{summaryLine}</p>}
           <ul
             ref={list}
             id={listId}
@@ -298,6 +306,7 @@ export default function MultiSelect({
                     {heading && (
                       <div className="px-3 pb-1 pt-2 text-xs font-semibold text-ink-muted" aria-hidden>
                         {heading}
+                        {o.groupHint && <span className="ml-1.5 font-normal">{o.groupHint}</span>}
                       </div>
                     )}
                     <div
@@ -309,7 +318,7 @@ export default function MultiSelect({
                       onMouseMove={() => setActive(i)}
                       className={`flex cursor-pointer items-center gap-3 px-3 py-2 text-sm ${
                         i === active ? 'bg-canvas' : ''
-                      } ${on ? 'bg-accent-soft' : ''}`}
+                      } ${on ? 'bg-accent-soft' : ''} ${o.muted && !on ? 'text-ink-muted' : ''}`}
                     >
                       <Icon
                         icon={on ? 'solar:check-square-bold' : 'solar:stop-linear'}

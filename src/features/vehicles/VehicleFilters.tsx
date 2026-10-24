@@ -14,6 +14,8 @@ import { useTripOptions } from '../../hooks/useTripOptions'
 import type { StatusFilter, UrlState } from '../../hooks/useUrlState'
 import { useVehicles } from '../../hooks/useVehicles'
 import { pruneTrips } from '../../lib/tripSelection'
+import { formatHmWib } from '../../lib/format'
+import { groupTrips, OTHER, RUNNING, tripSummary, type TripEntry } from '../../lib/tripGroups'
 
 interface Props {
   routes: string[]
@@ -35,8 +37,7 @@ const toOption = (r: RouteView): Option => ({
   swatch: r.color,
 })
 
-const RUNNING = 'Sedang berjalan'
-const ALL = 'Semua trip hari ini'
+const ALL = OTHER
 
 export default function VehicleFilters({ routes, trips, status = null, query = '', sheetOpen = false, onSheetClose = () => {}, onChange, knownRoutes = [] }: Props) {
   const q = useRouteOptions()
@@ -64,27 +65,38 @@ export default function VehicleFilters({ routes, trips, status = null, query = '
     return m
   }, [t.allTrips, t.namedTrips])
 
-  const toTripOption = (x: TripView, group: string): Option => {
+  const toTripOption = (x: TripView, group: string, e?: TripEntry): Option => {
     const r = x.routeId ? routeById.get(x.routeId) : undefined
     const dir = r?.directionNames[x.directionId]
+    const time = formatHmWib(e?.time)
+    const base = x.headsign || x.name || `Trip ${x.id}`
     return {
       value: x.id,
-      label: x.headsign || x.name || `Trip ${x.id}`,
-      description: [r?.name, dir && `arah ${dir}`, `trip ${x.id}`].filter(Boolean).join(' · '),
+      label: time ? `${base} · ${time}` : base,
+      description: [e?.vehicle && `Kendaraan ${e.vehicle}`, r?.name, dir && `arah ${dir}`, !e?.vehicle && `trip ${x.id}`].filter(Boolean).join(' · '),
       swatch: r?.color,
       group,
+      groupHint: group === OTHER ? 'belum berangkat atau sudah selesai' : undefined,
+      muted: group === OTHER,
     }
   }
 
-  const tripOptions = useMemo(() => {
-    const runningSet = new Set(runningIds)
-    const live = t.namedTrips.filter((x) => runningSet.has(x.id))
-    return [
-      ...live.map((x) => toTripOption(x, RUNNING)),
-      ...t.allTrips.filter((x) => !runningSet.has(x.id)).map((x) => toTripOption(x, ALL)),
-    ]
+  const vehicleByTrip = useMemo(() => {
+    const m = new Map<string, string>()
+    for (const v of running.data ?? []) if (v.tripId) m.set(v.tripId, v.label)
+    return m
+  }, [running.data])
+
+  const entries = useMemo(
+    () => groupTrips(t.namedTrips, t.allTrips, vehicleByTrip, t.times),
+    [t.namedTrips, t.allTrips, vehicleByTrip, t.times],
+  )
+  const tripOptions = useMemo(
+    () => entries.map((e) => toTripOption(e.trip, e.running ? RUNNING : OTHER, e)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [runningIds, t.namedTrips, t.allTrips, routeById])
+    [entries, routeById],
+  )
+  const tripSummaryText = tripOptions.length ? tripSummary(entries, !!t.all.hasNextPage) : undefined
 
   const tripChips = useMemo(
     () => trips.map((id) => tripById.get(id)).filter((x): x is TripView => !!x).map((x) => toTripOption(x, ALL)),
@@ -172,6 +184,7 @@ export default function VehicleFilters({ routes, trips, status = null, query = '
           label="Trip"
           placeholder="Semua trip"
           options={tripOptions}
+          summary={tripSummaryText}
           selected={trips}
           selectedOptions={tripChips}
           onChange={(next) => onChange({ trips: next })}
@@ -219,6 +232,7 @@ export default function VehicleFilters({ routes, trips, status = null, query = '
           label="Trip"
           placeholder="Semua trip"
           options={tripOptions}
+          summary={tripSummaryText}
           selected={trips}
           selectedOptions={tripChips}
           onChange={(next) => onChange({ trips: next })}

@@ -1,6 +1,6 @@
-import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useInfiniteQuery, useQueries, useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
-import { fetchTripsByIds, fetchTripsPage, type TripView } from '../api/trips'
+import { fetchFirstDepartures, fetchTripsByIds, fetchTripsPage, type TripView } from '../api/trips'
 
 const MAX_LABEL_IDS = 100
 
@@ -27,5 +27,22 @@ export function useTripOptions(routes: string[], runningIds: string[], selectedI
     placeholderData: keepPreviousData,
   })
   const allTrips = useMemo<TripView[]>(() => all.data?.pages.flatMap((p) => p.items) ?? [], [all.data])
-  return { all, named, allTrips, namedTrips: named.data ?? [] }
+  // One schedules request per loaded trip page. A failure just means no times (no error UI).
+  const timeQueries = useQueries({
+    queries: (all.data?.pages ?? []).map((p) => {
+      const pageIds = p.items.map((t) => t.id)
+      return {
+        queryKey: ['tripTimes', pageIds],
+        queryFn: ({ signal }: { signal: AbortSignal }) => fetchFirstDepartures(pageIds, signal),
+        staleTime: 5 * 60_000,
+        retry: false,
+      }
+    }),
+  })
+  const times = useMemo(
+    () => Object.assign({}, ...timeQueries.map((q) => q.data ?? {})) as Record<string, string>,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [timeQueries.map((q) => q.dataUpdatedAt).join()],
+  )
+  return { all, named, allTrips, namedTrips: named.data ?? [], times }
 }
