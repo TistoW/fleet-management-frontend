@@ -66,7 +66,9 @@ export function useUrlState() {
     const next = { ...cur, ...(filterChanged ? { page: 1 } : {}), ...patch }
     const url = window.location.pathname + buildSearch(next)
     if (url === window.location.pathname + window.location.search) return
-    window.history[opts.replace ? 'replaceState' : 'pushState'](null, '', url)
+    // The marker lets the page tell an in-app popup (close = Back) from a direct ?vehicle= load.
+    const marker = opts.replace ? window.history.state : patch.vehicle ? { fromApp: true } : null
+    window.history[opts.replace ? 'replaceState' : 'pushState'](marker, '', url)
     window.dispatchEvent(new Event(CHANGE))
   }, [])
 

@@ -18,6 +18,7 @@ interface Props {
   /** Basic data already in the list, shown while the detail request is in flight. */
   preview?: VehicleView
   onClose: () => void
+  autoRefresh?: boolean
 }
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -48,10 +49,10 @@ const SkeletonRows = () => (
 
 const access = (n: number) => (n === 1 ? 'Ya' : n === 2 ? 'Tidak' : 'Tidak ada data')
 
-export default function VehicleDetailModal({ id, preview, onClose }: Props) {
+export default function VehicleDetailModal({ id, preview, onClose, autoRefresh }: Props) {
   const ref = useRef<HTMLDialogElement>(null)
   const titleId = useId()
-  const q = useVehicleDetail(id)
+  const q = useVehicleDetail(id, autoRefresh)
   const d = q.data
   const v = d ?? preview
 

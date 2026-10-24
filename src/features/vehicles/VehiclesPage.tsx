@@ -85,7 +85,8 @@ export default function VehiclesPage() {
         <VehicleDetailModal
           id={url.vehicle}
           preview={data?.find((x) => x.id === url.vehicle)}
-          onClose={() => setUrl({ vehicle: null }, { replace: true })}
+          autoRefresh={auto}
+          onClose={() => (window.history.state?.fromApp ? window.history.back() : setUrl({ vehicle: null }, { replace: true }))}
         />
       )}
       {showBars && (
