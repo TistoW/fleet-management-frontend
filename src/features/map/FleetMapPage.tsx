@@ -117,12 +117,12 @@ export default function FleetMapPage({ url, setUrl, fleet, sheetOpen, onSheetClo
               <Icon icon="solar:bus-linear" className="size-4 text-accent" aria-hidden />
               {placed.length} kendaraan di peta
             </p>
-            <p className="mt-1 hidden gap-1.5 text-xs sm:flex">
-              <span className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 ${statusInfo('IN_TRANSIT_TO').tone}`}>
+            <p className="mt-1 hidden flex-wrap gap-1.5 text-xs sm:flex">
+              <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-md px-1.5 py-0.5 ${statusInfo('IN_TRANSIT_TO').tone}`}>
                 <Icon icon={statusInfo('IN_TRANSIT_TO').icon} className="size-3.5" aria-hidden />
                 {stats.berjalan} berjalan
               </span>
-              <span className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 ${statusInfo('STOPPED_AT').tone}`}>
+              <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-md px-1.5 py-0.5 ${statusInfo('STOPPED_AT').tone}`}>
                 <Icon icon={statusInfo('STOPPED_AT').icon} className="size-3.5" aria-hidden />
                 {stats.berhenti} berhenti
               </span>
