@@ -25,6 +25,17 @@ export function formatRelative(iso: string, now = Date.now()): string {
   return rtf.format(Math.round(diff / 86400), 'day')
 }
 
+/** Compact form for narrow rows: "12 dtk lalu", "3 mnt lalu", "2 j lalu". */
+export function formatRelativeShort(iso: string, now = Date.now()): string {
+  const abs = Math.abs(Math.round((new Date(iso).getTime() - now) / 1000))
+  if (Number.isNaN(abs)) return '-'
+  if (abs < 10) return 'baru saja'
+  if (abs < 60) return `${abs} dtk lalu`
+  if (abs < 3600) return `${Math.round(abs / 60)} mnt lalu`
+  if (abs < 86400) return `${Math.round(abs / 3600)} j lalu`
+  return `${Math.round(abs / 86400)} hr lalu`
+}
+
 export function formatCoord(n: number | null): string {
   return n === null ? '-' : n.toFixed(5)
 }

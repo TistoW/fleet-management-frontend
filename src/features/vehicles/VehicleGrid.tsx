@@ -12,6 +12,8 @@ interface Props {
   error: unknown
   skeletonCount?: number
   hasFilters?: boolean
+  query?: string
+  onClearSearch?: () => void
   onClearFilters?: () => void
   onRetry: () => void
   onOpen: (id: string) => void
@@ -26,6 +28,8 @@ export default function VehicleGrid({
   error,
   skeletonCount = 10,
   hasFilters,
+  query = '',
+  onClearSearch,
   onClearFilters,
   onRetry,
   onOpen,
@@ -55,6 +59,18 @@ export default function VehicleGrid({
   }
   if (!vehicles) return <ErrorState error={error} onRetry={onRetry} />
   if (vehicles.length === 0) {
+    if (query)
+      return (
+        <EmptyState
+          title={`Tidak ada kendaraan yang cocok dengan '${query}'`}
+          message="Periksa ejaannya, atau cari dengan label, nama rute, atau tujuan lain."
+          action={
+            <button type="button" onClick={onClearSearch} className={primaryBtn}>
+              Hapus pencarian
+            </button>
+          }
+        />
+      )
     return hasFilters ? (
       <EmptyState
         title="Tidak ada kendaraan yang cocok"
@@ -77,7 +93,7 @@ export default function VehicleGrid({
       <ul className="divide-y divide-line">
         {vehicles.map((v) => (
           <li key={v.id}>
-            <VehicleRow vehicle={v} onOpen={onOpen} onShowOnMap={onShowOnMap} />
+            <VehicleRow query={query} vehicle={v} onOpen={onOpen} onShowOnMap={onShowOnMap} />
           </li>
         ))}
       </ul>
@@ -86,7 +102,7 @@ export default function VehicleGrid({
     <ul className={GRID}>
       {vehicles.map((v) => (
         <li key={v.id}>
-          <VehicleCard vehicle={v} onOpen={onOpen} onShowOnMap={onShowOnMap} />
+          <VehicleCard query={query} vehicle={v} onOpen={onOpen} onShowOnMap={onShowOnMap} />
         </li>
       ))}
     </ul>

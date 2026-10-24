@@ -7,6 +7,7 @@ import StaleBanner from '../../components/StaleBanner'
 import StatCard, { StatCardSkeleton } from '../../components/StatCard'
 import type { FleetQuery, SetUrl } from '../../hooks/useFleet'
 import type { StatusFilter, UrlState } from '../../hooks/useUrlState'
+import { applySearch } from '../../lib/search'
 import { applyStatus, fleetStats } from '../../lib/fleetStats'
 import { pageAfterSizeChange, paginate, rangeText } from '../../lib/paginate'
 import VehicleFilters from './VehicleFilters'
@@ -24,8 +25,9 @@ interface Props {
 export default function VehiclesPage({ url, setUrl, fleet, sheetOpen, onSheetClose }: Props) {
   const { data, isPending, isFetching, isError, error, refetch, dataUpdatedAt, countdown } = fleet
   const hasFilters = url.routes.length > 0 || url.trips.length > 0 || !!url.status
-  const stats = useMemo(() => fleetStats(data ?? []), [data])
-  const shown = useMemo(() => applyStatus(data ?? [], url.status), [data, url.status])
+  const searched = useMemo(() => applySearch(data ?? [], url.q), [data, url.q])
+  const stats = useMemo(() => fleetStats(searched), [searched])
+  const shown = useMemo(() => applyStatus(searched, url.status), [searched, url.status])
   const result = paginate(shown, url.page, url.size)
   const mobile = useIsMobile()
   const scroller = useRef<HTMLDivElement>(null)
@@ -38,7 +40,7 @@ export default function VehiclesPage({ url, setUrl, fleet, sheetOpen, onSheetClo
   // Only the list scrolls, so a new page starts at its top.
   useEffect(() => {
     scroller.current?.scrollTo?.({ top: 0 })
-  }, [result.page, url.size, url.status])
+  }, [result.page, url.size, url.status, url.q])
 
   const knownRoutes = useMemo(() => {
     const seen = new Map<string, RouteView>()
@@ -79,7 +81,7 @@ export default function VehiclesPage({ url, setUrl, fleet, sheetOpen, onSheetClo
         )}
       </ul>
 
-      <VehicleFilters routes={url.routes} trips={url.trips} status={url.status} sheetOpen={sheetOpen} onSheetClose={onSheetClose} onChange={setUrl} knownRoutes={knownRoutes} />
+      <VehicleFilters routes={url.routes} trips={url.trips} status={url.status} query={url.q} sheetOpen={sheetOpen} onSheetClose={onSheetClose} onChange={setUrl} knownRoutes={knownRoutes} />
 
       <section aria-label="Daftar kendaraan" className="flex min-h-[22rem] flex-1 flex-col overflow-hidden rounded-2xl border border-line bg-paper max-md:-mx-4 max-md:min-h-0 max-md:rounded-none max-md:border-x-0">
         <div ref={scroller} className={`flex min-h-0 flex-1 flex-col overflow-y-auto ${isFetching && data ? 'opacity-70 transition-opacity' : ''}`}>
@@ -89,6 +91,8 @@ export default function VehiclesPage({ url, setUrl, fleet, sheetOpen, onSheetClo
             error={error}
             skeletonCount={url.size}
             hasFilters={hasFilters}
+            query={url.q.trim()}
+            onClearSearch={() => setUrl({ q: '' })}
             onClearFilters={() => setUrl({ routes: [], trips: [], status: null })}
             onRetry={() => void refetch()}
             onOpen={(id) => setUrl({ vehicle: id })}

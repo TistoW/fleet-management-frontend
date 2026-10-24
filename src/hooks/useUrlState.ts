@@ -19,6 +19,8 @@ export interface UrlState {
   status: StatusFilter | null
   /** Vehicle the map centres on (set by "Lihat di peta"). */
   focus: string | null
+  /** Free-text search over label, id, route and destination. */
+  q: string
   view: View
 }
 
@@ -36,6 +38,7 @@ export function parseUrlState(search: string): UrlState {
     vehicle: p.get('vehicle') || null,
     status: (STATUS_FILTERS as readonly string[]).includes(p.get('status') ?? '') ? (p.get('status') as StatusFilter) : null,
     focus: p.get('focus') || null,
+    q: p.get('q') ?? '',
     view: (VIEWS as readonly string[]).includes(p.get('view') ?? '') ? (p.get('view') as View) : 'kendaraan',
   }
 }
@@ -50,6 +53,7 @@ export function buildSearch(s: UrlState): string {
   if (s.vehicle) p.set('vehicle', s.vehicle)
   if (s.status) p.set('status', s.status)
   if (s.focus) p.set('focus', s.focus)
+  if (s.q) p.set('q', s.q)
   if (s.view !== 'kendaraan') p.set('view', s.view)
   const q = p.toString()
   return q ? `?${q}` : ''
@@ -79,7 +83,7 @@ export function useUrlState() {
 
   const update = useCallback((patch: Partial<UrlState>, opts: { replace?: boolean } = {}) => {
     const cur = parseUrlState(window.location.search)
-    const filterChanged = 'routes' in patch || 'trips' in patch || 'status' in patch
+    const filterChanged = 'routes' in patch || 'trips' in patch || 'status' in patch || 'q' in patch
     // Switching view closes any open popup; filters, page and size carry over.
     const next = { ...cur, ...(filterChanged ? { page: 1 } : {}), ...('view' in patch ? { vehicle: null, focus: null } : {}), ...patch }
     const url = window.location.pathname + buildSearch(next)

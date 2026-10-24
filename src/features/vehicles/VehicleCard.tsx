@@ -1,5 +1,6 @@
 import { Icon } from '@iconify/react'
 import type { VehicleView } from '../../api/vehicles'
+import Highlight from '../../components/Highlight'
 import StatusBadge from '../../components/StatusBadge'
 import { formatClockWib, formatCoord, formatRelative } from '../../lib/format'
 import { statusInfo } from '../../lib/status'
@@ -8,10 +9,11 @@ interface Props {
   vehicle: VehicleView
   onOpen: (id: string) => void
   onShowOnMap?: (id: string) => void
+  query?: string
 }
 
 /** The whole card opens the detail; "Lihat di peta" sits above the stretched button. */
-export default function VehicleCard({ vehicle: v, onOpen, onShowOnMap }: Props) {
+export default function VehicleCard({ vehicle: v, onOpen, onShowOnMap, query = '' }: Props) {
   const route = v.route
   const aria = `Kendaraan ${v.label}${route ? `, ${route.name}` : ''}, ${statusInfo(v.status).label}`
   return (
@@ -23,7 +25,7 @@ export default function VehicleCard({ vehicle: v, onOpen, onShowOnMap }: Props) 
           aria-label={aria}
           className="font-mono text-lg font-semibold tabular-nums outline-none after:absolute after:inset-0 after:rounded-2xl after:content-['']"
         >
-          {v.label}
+          <Highlight text={v.label} query={query} />
         </button>
         {route && (
           <span
@@ -31,7 +33,7 @@ export default function VehicleCard({ vehicle: v, onOpen, onShowOnMap }: Props) 
             style={{ backgroundColor: route.color, color: route.textColor }}
             title={route.longName || route.name}
           >
-            {route.name}
+            <Highlight text={route.name} query={query} />
           </span>
         )}
       </div>

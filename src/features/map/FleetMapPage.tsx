@@ -9,6 +9,7 @@ import StaleBanner from '../../components/StaleBanner'
 import type { FleetQuery, SetUrl } from '../../hooks/useFleet'
 import type { UrlState } from '../../hooks/useUrlState'
 import { applyStatus, fleetStats } from '../../lib/fleetStats'
+import { applySearch } from '../../lib/search'
 import { statusInfo } from '../../lib/status'
 import VehicleFilters from '../vehicles/VehicleFilters'
 
@@ -30,7 +31,7 @@ export default function FleetMapPage({ url, setUrl, fleet, sheetOpen, onSheetClo
   const { data, isPending, isError, error, refetch, dataUpdatedAt, countdown, isPlaceholderData } = fleet
   const [FleetMap, setFleetMap] = useState(loadMap)
 
-  const placed = useMemo(() => applyStatus(data ?? [], url.status).filter((v) => v.lat != null && v.lng != null), [data, url.status])
+  const placed = useMemo(() => applyStatus(applySearch(data ?? [], url.q), url.status).filter((v) => v.lat != null && v.lng != null), [data, url.status, url.q])
   const stats = useMemo(() => fleetStats(placed), [placed])
   const knownRoutes = useMemo(() => {
     const seen = new Map<string, RouteView>()
@@ -46,8 +47,8 @@ export default function FleetMapPage({ url, setUrl, fleet, sheetOpen, onSheetClo
       .sort((a, b) => b.n - a.n)
   }, [knownRoutes, placed])
 
-  const hasFilters = url.routes.length > 0 || url.trips.length > 0 || !!url.status
-  const fitKey = isPlaceholderData ? null : `${url.routes.join(',')}|${url.trips.join(',')}`
+  const hasFilters = url.routes.length > 0 || url.trips.length > 0 || !!url.status || !!url.q.trim()
+  const fitKey = isPlaceholderData ? null : `${url.routes.join(',')}|${url.trips.join(',')}|${url.q}`
 
   const box = 'flex min-h-[26rem] flex-1 items-center justify-center rounded-2xl border border-line bg-paper max-md:rounded-none max-md:border-0'
   let body
@@ -66,7 +67,7 @@ export default function FleetMapPage({ url, setUrl, fleet, sheetOpen, onSheetClo
         message={hasFilters ? 'Tidak ada kendaraan dengan posisi untuk filter ini.' : 'MBTA belum mengirim posisi kendaraan saat ini.'}
         action={
           hasFilters && (
-            <button type="button" onClick={() => setUrl({ routes: [], trips: [], status: null })} className={primaryBtn}>
+            <button type="button" onClick={() => setUrl({ routes: [], trips: [], status: null, q: '' })} className={primaryBtn}>
               Hapus filter
             </button>
           )
@@ -150,7 +151,7 @@ export default function FleetMapPage({ url, setUrl, fleet, sheetOpen, onSheetClo
       <p className="text-sm text-ink-muted max-md:hidden">Lihat sebaran bus di peta. Ketuk penanda untuk membuka detail kendaraan.</p>
       {isError && data && <StaleBanner updatedAt={dataUpdatedAt} countdown={countdown} onRetry={() => void refetch()} />}
       <div className="max-md:px-4 max-md:has-[ul]:py-2">
-        <VehicleFilters routes={url.routes} trips={url.trips} status={url.status} sheetOpen={sheetOpen} onSheetClose={onSheetClose} onChange={setUrl} knownRoutes={knownRoutes} />
+        <VehicleFilters routes={url.routes} trips={url.trips} status={url.status} query={url.q} sheetOpen={sheetOpen} onSheetClose={onSheetClose} onChange={setUrl} knownRoutes={knownRoutes} />
       </div>
       {body}
     </div>

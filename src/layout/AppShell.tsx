@@ -1,6 +1,8 @@
 import { Icon } from '@iconify/react'
 import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react'
 import BottomSheet from '../components/BottomSheet'
+import { useIsMobile } from '../hooks/useIsMobile'
+import SearchField from '../components/SearchField'
 import Spinner from '../components/Spinner'
 import type { View } from '../hooks/useUrlState'
 import { formatClockWib } from '../lib/format'
@@ -27,6 +29,8 @@ interface Props {
   /** Status and refresh controls; left out on pages that show no live data. */
   live?: Live
   /** Phones: the app bar gets a filter button with a badge of active filters. */
+  /** Phones: a search icon turns the app bar into a search bar. */
+  search?: { value: string; onChange: (q: string) => void }
   filter?: { count: number; onOpen: () => void }
   children: ReactNode
 }
@@ -40,7 +44,10 @@ const read = () => {
   }
 }
 
-export default function AppShell({ view, hrefFor, onNavigate, live, filter, children }: Props) {
+export default function AppShell({ view, hrefFor, onNavigate, live, search, filter, children }: Props) {
+  const [searchOpen, setSearching] = useState(() => !!search?.value)
+  const mobile = useIsMobile()
+  const searching = searchOpen && mobile
   const [collapsed, setCollapsed] = useState(read)
   const [options, setOptions] = useState(false)
   const title = NAV.find((n) => n.view === view)?.label ?? ''
@@ -137,10 +144,24 @@ export default function AppShell({ view, hrefFor, onNavigate, live, filter, chil
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="relative flex h-14 shrink-0 items-center gap-x-4 border-b border-line bg-paper px-4 md:h-auto md:min-h-14 md:flex-wrap md:gap-y-1 md:px-6 md:py-2">
-          <h1 className="min-w-0 flex-1 truncate text-lg font-semibold md:text-sm">{title}</h1>
+          {search && searching && (
+            <div className="-ml-2 flex min-w-0 flex-1 items-center gap-1 md:hidden">
+              <IconButton
+                label="Tutup pencarian"
+                icon="solar:arrow-left-linear"
+                onClick={() => {
+                  search.onChange('')
+                  setSearching(false)
+                }}
+              />
+              <SearchField value={search.value} onChange={search.onChange} autoFocus className="min-w-0 flex-1" />
+            </div>
+          )}
+          <h1 className={`min-w-0 flex-1 truncate text-lg font-semibold md:text-sm ${search && searching ? 'max-md:hidden' : ''}`}>{title}</h1>
           {live && <Toolbar {...live} />}
-          {(live || filter) && (
+          {(live || filter) && !(search && searching) && (
             <div className="-mr-2 flex items-center md:hidden">
+              {search && <IconButton label="Cari" icon="solar:magnifer-linear" onClick={() => setSearching(true)} />}
               {live && <IconButton label="Segarkan data" icon="solar:refresh-linear" spin={live.isFetching} onClick={live.onRefresh} />}
               {filter && <IconButton label="Filter" icon="solar:filter-linear" badge={filter.count} onClick={filter.onOpen} />}
               {live && <IconButton label="Opsi pembaruan" icon="solar:menu-dots-bold" onClick={() => setOptions(true)} />}

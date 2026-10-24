@@ -1,16 +1,18 @@
 import { Icon } from '@iconify/react'
 import type { VehicleView } from '../../api/vehicles'
-import { formatCoord, formatRelative } from '../../lib/format'
+import Highlight from '../../components/Highlight'
+import { formatCoord, formatRelative, formatRelativeShort } from '../../lib/format'
 import { statusInfo } from '../../lib/status'
 
 interface Props {
   vehicle: VehicleView
   onOpen: (id: string) => void
   onShowOnMap?: (id: string) => void
+  query?: string
 }
 
 /** Phone version of VehicleCard: a dense two-target list item, like an Android list row. */
-export default function VehicleRow({ vehicle: v, onOpen, onShowOnMap }: Props) {
+export default function VehicleRow({ vehicle: v, onOpen, onShowOnMap, query = '' }: Props) {
   const route = v.route
   const s = statusInfo(v.status)
   const aria = `Kendaraan ${v.label}${route ? `, ${route.name}` : ''}, ${s.label}`
@@ -23,13 +25,13 @@ export default function VehicleRow({ vehicle: v, onOpen, onShowOnMap }: Props) {
         className="flex min-h-[76px] min-w-0 flex-1 flex-col justify-center gap-1 px-4 py-2.5 text-left transition-colors active:bg-ink/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent"
       >
         <span className="flex min-w-0 items-center gap-2">
-          <span className="shrink-0 font-mono text-base font-semibold tabular-nums">{v.label}</span>
+          <span className="shrink-0 font-mono text-base font-semibold tabular-nums"><Highlight text={v.label} query={query} /></span>
           {route && (
             <span
               className="max-w-[9rem] truncate rounded-md px-1.5 py-0.5 text-xs font-semibold"
               style={{ backgroundColor: route.color, color: route.textColor }}
             >
-              {route.name}
+              <Highlight text={route.name} query={query} />
             </span>
           )}
         </span>
@@ -41,7 +43,9 @@ export default function VehicleRow({ vehicle: v, onOpen, onShowOnMap }: Props) {
           <span className="min-w-0 truncate font-mono text-[11px] text-ink-muted">{v.status ?? 'null'}</span>
         </span>
         <span className="truncate font-mono text-[11px] tabular-nums text-ink-muted">
-          {formatCoord(v.lat)}, {formatCoord(v.lng)} · {formatRelative(v.updatedAt)}
+          {formatCoord(v.lat)}, {formatCoord(v.lng)} ·{' '}
+          <span className="min-[400px]:hidden">{formatRelativeShort(v.updatedAt)}</span>
+          <span className="max-[399px]:hidden">{formatRelative(v.updatedAt)}</span>
         </span>
       </button>
       {onShowOnMap && v.lat != null && v.lng != null && (

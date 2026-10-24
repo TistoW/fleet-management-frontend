@@ -7,6 +7,7 @@ import { STATUS_FILTER_LABEL } from '../../lib/fleetStats'
 import { describeError } from '../../api/errors'
 import type { RouteView } from '../../api/routes'
 import type { TripView } from '../../api/trips'
+import SearchField from '../../components/SearchField'
 import MultiSelect, { type Option } from '../../components/MultiSelect'
 import { useRouteOptions } from '../../hooks/useRouteOptions'
 import { useTripOptions } from '../../hooks/useTripOptions'
@@ -18,10 +19,11 @@ interface Props {
   routes: string[]
   trips: string[]
   status?: StatusFilter | null
+  query?: string
   /** Phones: the filters live in a bottom sheet opened from the app bar. */
   sheetOpen?: boolean
   onSheetClose?: () => void
-  onChange: (patch: Partial<Pick<UrlState, 'routes' | 'trips' | 'status'>>, opts?: { replace?: boolean }) => void
+  onChange: (patch: Partial<Pick<UrlState, 'routes' | 'trips' | 'status' | 'q'>>, opts?: { replace?: boolean }) => void
   /** Routes seen on vehicles, used to name chips from the URL before /routes has loaded them. */
   knownRoutes?: RouteView[]
 }
@@ -36,7 +38,7 @@ const toOption = (r: RouteView): Option => ({
 const RUNNING = 'Sedang berjalan'
 const ALL = 'Semua trip hari ini'
 
-export default function VehicleFilters({ routes, trips, status = null, sheetOpen = false, onSheetClose = () => {}, onChange, knownRoutes = [] }: Props) {
+export default function VehicleFilters({ routes, trips, status = null, query = '', sheetOpen = false, onSheetClose = () => {}, onChange, knownRoutes = [] }: Props) {
   const q = useRouteOptions()
   const options = useMemo(() => q.routes.map(toOption), [q.routes])
   const known = useMemo(() => knownRoutes.map(toOption), [knownRoutes])
@@ -123,6 +125,7 @@ export default function VehicleFilters({ routes, trips, status = null, sheetOpen
     ...tripChips.length === trips.length
       ? tripChips.map((o) => ({ key: `t${o.value}`, label: o.label, swatch: o.swatch, onRemove: () => onChange({ trips: trips.filter((x) => x !== o.value) }) }))
       : trips.map((id) => ({ key: `t${id}`, label: `Trip ${id}`, onRemove: () => onChange({ trips: trips.filter((x) => x !== id) }) })),
+    ...(query.trim() ? [{ key: 'q', label: `Cari: “${query.trim()}”`, onRemove: () => onChange({ q: '' }) }] : []),
     ...(status ? [{ key: 's', label: STATUS_FILTER_LABEL[status], onRemove: () => onChange({ status: null }) }] : []),
   ]
 
@@ -191,6 +194,7 @@ export default function VehicleFilters({ routes, trips, status = null, sheetOpen
         )
       ) : (
         <div className="grid gap-3 rounded-2xl border border-line bg-paper p-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1.2fr]">
+        <SearchField value={query} onChange={(next) => onChange({ q: next })} shortcut className="col-span-full" />
         <MultiSelect
           label="Rute"
           placeholder="Semua rute"
@@ -230,7 +234,7 @@ export default function VehicleFilters({ routes, trips, status = null, sheetOpen
         </p>
         </div>
       )}
-      <ActiveFilters chips={chips} onClear={() => onChange({ routes: [], trips: [], status: null })} />
+      <ActiveFilters chips={chips} onClear={() => onChange({ routes: [], trips: [], status: null, q: '' })} />
     </div>
   )
 }

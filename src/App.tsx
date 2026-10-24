@@ -34,6 +34,7 @@ function Dashboard() {
         setSheet(false)
         setUrl({ view })
       }}
+      search={url.view === 'data' ? undefined : { value: url.q, onChange: (q) => setUrl({ q }) }}
       filter={url.view === 'data' ? undefined : { count: filterCount, onOpen: () => setSheet(true) }}
       live={
         url.view === 'data'
