@@ -6,6 +6,7 @@ import ErrorBoundary from '../../components/ErrorBoundary'
 import ErrorState from '../../components/ErrorState'
 import Spinner from '../../components/Spinner'
 import StaleBanner from '../../components/StaleBanner'
+import { useRouteShapes } from '../../hooks/useJourney'
 import type { FleetQuery, SetUrl } from '../../hooks/useFleet'
 import type { UrlState } from '../../hooks/useUrlState'
 import { applyStatus, fleetStats } from '../../lib/fleetStats'
@@ -49,6 +50,11 @@ export default function FleetMapPage({ url, setUrl, fleet, sheetOpen, onSheetClo
       .filter((x) => x.n > 0)
       .sort((a, b) => b.n - a.n)
   }, [knownRoutes, placed])
+
+  // One selected route: its line goes faintly behind the markers (one cached request per route).
+  const onlyRoute = url.routes.length === 1 ? knownRoutes.find((r) => r.id === url.routes[0]) : undefined
+  const routeShapes = useRouteShapes(onlyRoute?.id)
+  const routeLines = onlyRoute && routeShapes.data?.length ? { color: onlyRoute.color, lines: routeShapes.data } : undefined
 
   const hasFilters = url.routes.length > 0 || url.trips.length > 0 || !!url.status || !!url.q.trim()
   const fitKey = isPlaceholderData ? null : `${url.routes.join(',')}|${url.trips.join(',')}|${url.q}`
@@ -104,7 +110,7 @@ export default function FleetMapPage({ url, setUrl, fleet, sheetOpen, onSheetClo
               </div>
             }
           >
-            <ProviderMap Osm={FleetMap} Google={GoogleFleet} mapProps={{ vehicles: placed, fitKey, focusId: url.focus, onOpen: (id: string) => setUrl({ vehicle: id }) }} />
+            <ProviderMap Osm={FleetMap} Google={GoogleFleet} mapProps={{ vehicles: placed, fitKey, focusId: url.focus, routeLines, onOpen: (id: string) => setUrl({ vehicle: id }) }} />
           </Suspense>
         </ErrorBoundary>
         <button

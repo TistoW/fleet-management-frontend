@@ -3,12 +3,13 @@ import { useEffect, useMemo, useRef } from 'react'
 import type { VehicleView } from '../../api/vehicles'
 import { isStale } from '../../lib/stale'
 import { pinHtml } from '../vehicles/pin'
-import { GoogleShell, Pin } from './GoogleShell'
+import { GoogleShell, GPolyline, Pin } from './GoogleShell'
 
 interface Props {
   vehicles: VehicleView[]
   fitKey: string | null
   focusId?: string | null
+  routeLines?: { color: string; lines: [number, number][][] }
   onOpen: (id: string) => void
   onFail: () => void
 }
@@ -39,7 +40,7 @@ function Camera({ points, fitKey, focus }: { points: google.maps.LatLngLiteral[]
   return null
 }
 
-export default function GoogleFleetMap({ vehicles, fitKey, focusId, onOpen, onFail }: Props) {
+export default function GoogleFleetMap({ vehicles, fitKey, focusId, routeLines, onOpen, onFail }: Props) {
   const placed = useMemo(() => vehicles.filter((v) => v.lat != null && v.lng != null), [vehicles])
   const points = useMemo(() => placed.map((v) => ({ lat: v.lat!, lng: v.lng! })), [placed])
   const f = placed.find((v) => v.id === focusId)
@@ -47,6 +48,9 @@ export default function GoogleFleetMap({ vehicles, fitKey, focusId, onOpen, onFa
   return (
     <div className="absolute inset-0 isolate z-0 overflow-hidden rounded-2xl border border-line max-md:rounded-none max-md:border-0">
       <GoogleShell onFail={onFail} defaultCenter={{ lat: 42.3601, lng: -71.0589 }} defaultZoom={11}>
+        {routeLines?.lines.map((l, i) => (
+          <GPolyline key={i} path={l} strokeColor={routeLines.color} strokeOpacity={0.35} strokeWeight={4} clickable={false} />
+        ))}
         {placed.map((v) => (
           <AdvancedMarker
             key={v.id}

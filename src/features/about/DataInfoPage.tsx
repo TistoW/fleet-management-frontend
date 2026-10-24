@@ -123,6 +123,11 @@ export default function DataInfoPage() {
           Kendaraan yang <code className={code}>updated_at</code>-nya lebih dari <strong>5 menit</strong> lalu diberi lencana &quot;GPS tidak update&quot;,
           waktunya berwarna oranye, dan penandanya di peta menjadi pudar dengan garis putus-putus. Angkanya ada di kartu &quot;GPS tidak update&quot; yang bisa diklik untuk menyaring.
         </p>
+        <p>
+          Peta detail menggambar jalur trip (<code className={code}>/trips/{'{id}'}?include=shape</code>, di-cache per trip) dan halte berikutnya dari{' '}
+          <code className={code}>/predictions</code>, dengan <code className={code}>/schedules</code> sebagai cadangan berlabel &quot;Jadwal&quot;. Prediksi diperbarui tiap 30 detik
+          hanya selama popup terbuka; bila gagal, garis dan daftar halte tidak ditampilkan.
+        </p>
       </Block>
 
       <Block icon="solar:check-square-linear" title="Teknologi">

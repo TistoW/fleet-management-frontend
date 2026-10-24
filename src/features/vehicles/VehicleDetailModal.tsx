@@ -1,14 +1,16 @@
 import { Icon } from '@iconify/react'
-import { lazy, Suspense, useEffect, useId, useRef, useState, type ReactNode } from 'react'
+import { lazy, Suspense, useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react'
 import { ApiError } from '../../api/errors'
 import type { VehicleView } from '../../api/vehicles'
 import ErrorBoundary from '../../components/ErrorBoundary'
 import ErrorState from '../../components/ErrorState'
 import { DetailRowSkeleton } from '../../components/Skeletons'
 import StatusBadge from '../../components/StatusBadge'
+import { useTripShape, useUpcoming } from '../../hooks/useJourney'
 import { useStreetName } from '../../hooks/useStreetName'
 import { useVehicleDetail } from '../../hooks/useVehicleDetail'
-import { formatClockWib, formatCoord, formatRelative } from '../../lib/format'
+import { formatClockWib, formatCoord, formatEta, formatHmWib, formatRelative } from '../../lib/format'
+import { splitAtClosest, type Journey } from '../../lib/geo'
 import Spinner from '../../components/Spinner'
 import ProviderMap from '../map/ProviderMap'
 import { occupancyLabel, routeTypeLabel, statusInfo } from '../../lib/status'
@@ -35,7 +37,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   )
 }
 
-function Row({ label, children }: { label: string; children: ReactNode }) {
+function Row({ label, children }: { label: ReactNode; children: ReactNode }) {
   return (
     <div className="flex justify-between gap-4 py-1.5">
       <dt className="text-ink-muted">{label}</dt>
@@ -64,6 +66,19 @@ export default function VehicleDetailModal({ id, preview, onClose, autoRefresh }
   const d = q.data
   const v = d ?? preview
   const street = useStreetName(v?.lat, v?.lng)
+  const tripId = d?.tripId
+  const shape = useTripShape(tripId)
+  const upcomingQ = useUpcoming(tripId, autoRefresh)
+  const [showAll, setShowAll] = useState(false)
+  const upcoming = useMemo(() => upcomingQ.data ?? [], [upcomingQ.data])
+  const vLat = v?.lat
+  const vLng = v?.lng
+  // The shape is cached per trip; only the split point moves with each 30 s position update.
+  const journey = useMemo((): Journey | undefined => {
+    if (!tripId || !shape.data || shape.data.length < 2 || vLat == null || vLng == null) return undefined
+    const stops = upcoming.filter((s) => s.lat != null && s.lng != null).map((s) => ({ lat: s.lat!, lng: s.lng!, name: s.name }))
+    return { ...splitAtClosest(shape.data, [vLat, vLng]), stops, frameKey: tripId }
+  }, [tripId, shape.data, upcoming, vLat, vLng])
   const anyCarriageData = !!d?.carriages.some((c) => hasOcc(c.occupancy_status))
   const missing = d
     ? [d.trip && d.trip.bikes === 0 && 'Sepeda', d.speed == null && 'Kecepatan', !hasOcc(d.occupancy) && !anyCarriageData && 'Okupansi'].filter((x): x is string => !!x)
@@ -204,6 +219,36 @@ export default function VehicleDetailModal({ id, preview, onClose, autoRefresh }
                     <SkeletonRows />
                   )}
                 </Section>
+                {upcoming.length > 0 && (
+                  <Section title={upcoming[0].kind === 'schedule' ? 'Jadwal berikutnya' : 'Perjalanan berikutnya'}>
+                    {(showAll ? upcoming : upcoming.slice(0, 5)).map((s, i) => {
+                      const last = s === upcoming[upcoming.length - 1]
+                      return (
+                        <Row
+                          key={`${s.id}-${i}`}
+                          label={
+                            last ? (
+                              <span className="inline-flex items-center gap-1.5">
+                                <Icon icon="solar:flag-bold" className="size-4 shrink-0 text-accent" aria-hidden />
+                                {s.name}
+                              </span>
+                            ) : (
+                              s.name
+                            )
+                          }
+                        >
+                          <span className="font-mono tabular-nums">{formatHmWib(s.at)}</span> WIB
+                          <span className="block text-xs text-ink-muted">{formatEta(s.at)}</span>
+                        </Row>
+                      )
+                    })}
+                    {upcoming.length > 5 && (
+                      <button type="button" onClick={() => setShowAll((x) => !x)} className="pt-2 text-sm text-accent underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
+                        {showAll ? 'Sembunyikan' : `Lihat semua (${upcoming.length} halte)`}
+                      </button>
+                    )}
+                  </Section>
+                )}
                 <Section title="Lainnya">
                   {d ? (
                     <>
@@ -274,6 +319,7 @@ export default function VehicleDetailModal({ id, preview, onClose, autoRefresh }
                     textColor: route?.textColor ?? '#FFFFFF',
                     label: v.label,
                     stop: d?.stop && d.stop.lat != null && d.stop.lng != null ? { lat: d.stop.lat, lng: d.stop.lng, name: d.stop.name } : undefined,
+                    journey,
                   }}
                 />
               </Suspense>

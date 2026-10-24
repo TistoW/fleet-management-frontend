@@ -10,6 +10,7 @@ import dangerTriangleBold from '@iconify-icons/solar/danger-triangle-bold'
 import dangerTriangleBoldDuotone from '@iconify-icons/solar/danger-triangle-bold-duotone'
 import doubleAltArrowLeftLinear from '@iconify-icons/solar/double-alt-arrow-left-linear'
 import doubleAltArrowRightLinear from '@iconify-icons/solar/double-alt-arrow-right-linear'
+import flagBold from '@iconify-icons/solar/flag-bold'
 import hamburgerMenuBold from '@iconify-icons/solar/hamburger-menu-bold'
 import infoCircleBold from '@iconify-icons/solar/info-circle-bold'
 import magniferLinear from '@iconify-icons/solar/magnifer-linear'
@@ -42,6 +43,7 @@ const icons = {
   'solar:alt-arrow-left-linear': altArrowLeftLinear,
   'solar:alt-arrow-right-linear': altArrowRightLinear,
   'solar:bus-bold': busBold,
+  'solar:flag-bold': flagBold,
   'solar:bus-bold-duotone': busBoldDuotone,
   'solar:check-square-bold': checkSquareBold,
   'solar:close-circle-bold': closeCircleBold,

@@ -2,7 +2,7 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { isStale } from '../../lib/stale'
-import { MapContainer, Marker, TileLayer, useMap } from 'react-leaflet'
+import { MapContainer, Marker, Polyline, TileLayer, useMap } from 'react-leaflet'
 import type { VehicleView } from '../../api/vehicles'
 import { vehicleIcon } from '../vehicles/vehicleIcon'
 
@@ -12,6 +12,8 @@ interface Props {
   fitKey: string | null
   /** Vehicle to centre on, from "Lihat di peta". */
   focusId?: string | null
+  /** Faint line(s) of the single selected route. */
+  routeLines?: { color: string; lines: [number, number][][] }
   onOpen: (id: string) => void
 }
 
@@ -57,7 +59,7 @@ function Focus({ target }: { target?: [number, number] }) {
   return null
 }
 
-export default function FleetMap({ vehicles, fitKey, focusId, onOpen }: Props) {
+export default function FleetMap({ vehicles, fitKey, focusId, routeLines, onOpen }: Props) {
   const [tileFailed, setTileFailed] = useState(false)
   const placed = useMemo(() => vehicles.filter((v) => v.lat != null && v.lng != null), [vehicles])
   const focus = placed.find((v) => v.id === focusId)
@@ -72,6 +74,9 @@ export default function FleetMap({ vehicles, fitKey, focusId, onOpen }: Props) {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           eventHandlers={{ tileerror: () => setTileFailed(true), tileload: () => setTileFailed(false) }}
         />
+        {routeLines?.lines.map((l, i) => (
+          <Polyline key={i} positions={l} interactive={false} pathOptions={{ color: routeLines.color, weight: 4, opacity: 0.35 }} />
+        ))}
         {placed.map((v) => (
           <Marker
             key={v.id}

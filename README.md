@@ -52,6 +52,10 @@ Peta bawaan adalah Leaflet + OpenStreetMap dan tidak butuh key. Untuk menampilka
 - Bila Google gagal (key ditolak karena referrer, API belum aktif, atau skrip gagal dimuat), peta otomatis kembali ke OpenStreetMap dengan catatan kecil.
 - Roda mouse di atas peta memperbesar/memperkecil peta (tidak menggulir popup); di HP tetap cubit untuk zoom dan satu jari untuk menggeser.
 
+### Rute perjalanan di peta detail
+
+Popup detail menggambar jalur trip kendaraan (`/trips/{id}?include=shape`, polyline Google didekode di `src/lib/geo.ts`): bagian di depan kendaraan tebal, bagian yang sudah dilewati pudar. Titik pemisahnya adalah titik terdekat di jalur ke posisi kendaraan dan ikut bergeser tiap pembaruan 30 detik, tanpa mengambil ulang bentuk jalur (di-cache selamanya per trip). Halte berikutnya diambil dari `/predictions?filter[trip]=` (cadangan: `/schedules`, ditandai "Jadwal") dan tampil sebagai titik kecil di peta, tujuan sebagai penanda bendera, serta daftar "Perjalanan berikutnya" (5 halte pertama, "Lihat semua (N halte)" untuk sisanya) dengan jam WIB dan "x mnt lagi". Total tambahan: 2 permintaan saat popup dibuka, lalu 1 permintaan prediksi per 30 detik selama popup terbuka. Bila gagal, kendaraan tetap tampil tanpa garis dan bagiannya disembunyikan. Di Peta Armada, memilih tepat satu rute menggambar garis rute itu samar di belakang penanda (`/shapes?filter[route]=`, di-cache).
+
 ## Arsitektur
 
 ```

@@ -48,3 +48,13 @@ export function formatHmWib(iso: string | undefined): string {
   const d = new Date(iso)
   return Number.isNaN(d.getTime()) ? '' : hm.format(d).replace(/\./g, ':')
 }
+
+/** "5 mnt lagi", "sebentar lagi" under a minute, "baru lewat" when already past. */
+export function formatEta(iso: string, now = Date.now()): string {
+  const diff = (new Date(iso).getTime() - now) / 1000
+  if (Number.isNaN(diff)) return ''
+  if (diff < -30) return 'baru lewat'
+  if (diff < 60) return 'sebentar lagi'
+  const m = Math.round(diff / 60)
+  return m < 60 ? `${m} mnt lagi` : `${Math.floor(m / 60)} j ${m % 60} mnt lagi`
+}

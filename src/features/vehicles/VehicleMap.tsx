@@ -1,6 +1,9 @@
 import 'leaflet/dist/leaflet.css'
-import { useEffect, useMemo, useState } from 'react'
-import { CircleMarker, MapContainer, Marker, TileLayer, Tooltip, useMap } from 'react-leaflet'
+import L from 'leaflet'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { CircleMarker, MapContainer, Marker, Polyline, TileLayer, Tooltip, useMap } from 'react-leaflet'
+import type { Journey } from '../../lib/geo'
+import { destinationHtml } from './pin'
 import { vehicleIcon } from './vehicleIcon'
 
 interface Props {
@@ -11,18 +14,19 @@ interface Props {
   textColor: string
   label: string
   stop?: { lat: number; lng: number; name: string }
+  journey?: Journey
 }
 
 /**
  * The map mounts before the dialog has its final size (lazy chunk + showModal), which leaves most
  * tiles grey. Re-measure on every container resize and keep the vehicle centered afterwards.
  */
-function FitContainer({ lat, lng }: { lat: number; lng: number }) {
+function FitContainer({ lat, lng, framed }: { lat: number; lng: number; framed: boolean }) {
   const map = useMap()
   useEffect(() => {
     const refit = () => {
       map.invalidateSize()
-      map.setView([lat, lng], map.getZoom(), { animate: false })
+      if (!framed) map.setView([lat, lng], map.getZoom(), { animate: false })
     }
     const raf = requestAnimationFrame(refit)
     const ro = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(refit)
@@ -31,22 +35,36 @@ function FitContainer({ lat, lng }: { lat: number; lng: number }) {
       cancelAnimationFrame(raf)
       ro?.disconnect()
     }
-  }, [map, lat, lng])
+  }, [map, lat, lng, framed])
+  return null
+}
+
+/** Fits the remaining route plus the vehicle once per trip; later refreshes only move the split. */
+function Frame({ journey, lat, lng }: { journey?: Journey; lat: number; lng: number }) {
+  const map = useMap()
+  const done = useRef<string | null>(null)
+  useEffect(() => {
+    if (!journey || done.current === journey.frameKey) return
+    done.current = journey.frameKey
+    map.fitBounds(L.latLngBounds([...journey.ahead, [lat, lng]]), { padding: [30, 30], maxZoom: 16, animate: false })
+  }, [map, journey, lat, lng])
   return null
 }
 
 /** Keeps the vehicle in view when a refresh moves it. */
-function Recenter({ lat, lng }: { lat: number; lng: number }) {
+function Recenter({ lat, lng, off }: { lat: number; lng: number; off: boolean }) {
   const map = useMap()
   useEffect(() => {
-    map.panTo([lat, lng])
-  }, [map, lat, lng])
+    if (!off) map.panTo([lat, lng])
+  }, [map, lat, lng, off])
   return null
 }
 
-export default function VehicleMap({ lat, lng, bearing, color, textColor, label, stop }: Props) {
+export default function VehicleMap({ lat, lng, bearing, color, textColor, label, stop, journey }: Props) {
   const [tileFailed, setTileFailed] = useState(false)
   const icon = useMemo(() => vehicleIcon(color, textColor, bearing), [color, textColor, bearing])
+  const dest = journey?.stops.at(-1)
+  const destIcon = useMemo(() => L.divIcon({ className: '', iconSize: [26, 26], iconAnchor: [13, 13], html: destinationHtml(color) }), [color])
 
   return (
     <div className="relative isolate z-0 h-full min-h-64 overflow-hidden rounded-lg border border-line">
@@ -56,14 +74,31 @@ export default function VehicleMap({ lat, lng, bearing, color, textColor, label,
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           eventHandlers={{ tileerror: () => setTileFailed(true), tileload: () => setTileFailed(false) }}
         />
+        {journey && (
+          <>
+            <Polyline positions={journey.passed} pathOptions={{ color, weight: 4, opacity: 0.3, dashArray: '2 8' }} />
+            <Polyline positions={journey.ahead} pathOptions={{ color, weight: 5, opacity: 0.9 }} />
+            {journey.stops.slice(0, -1).map((s) => (
+              <CircleMarker key={`${s.name}-${s.lat}`} center={[s.lat, s.lng]} radius={3.5} pathOptions={{ color, weight: 2, fillColor: '#fff', fillOpacity: 1 }}>
+                <Tooltip>{s.name}</Tooltip>
+              </CircleMarker>
+            ))}
+            {dest && (
+              <Marker position={[dest.lat, dest.lng]} icon={destIcon} title={`Tujuan: ${dest.name}`}>
+                <Tooltip>{dest.name}</Tooltip>
+              </Marker>
+            )}
+          </>
+        )}
         {stop && (
           <CircleMarker center={[stop.lat, stop.lng]} radius={6} pathOptions={{ color: '#17201D', fillColor: '#fff', fillOpacity: 1 }}>
             <Tooltip>{stop.name}</Tooltip>
           </CircleMarker>
         )}
         <Marker position={[lat, lng]} icon={icon} title={`Kendaraan ${label}`} />
-        <FitContainer lat={lat} lng={lng} />
-        <Recenter lat={lat} lng={lng} />
+        <FitContainer lat={lat} lng={lng} framed={!!journey} />
+        <Frame journey={journey} lat={lat} lng={lng} />
+        <Recenter lat={lat} lng={lng} off={!!journey} />
       </MapContainer>
       {tileFailed && (
         <p role="status" className="absolute inset-x-2 bottom-8 z-[1000] rounded-md bg-paper/95 px-3 py-2 text-xs text-ink-muted shadow-sm">
