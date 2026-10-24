@@ -1,11 +1,23 @@
 # Pantau Armada
 
-Aplikasi satu halaman untuk memantau kendaraan MBTA (Boston) secara langsung: grid kartu kendaraan, filter rute dan trip, pagination lengkap, dan popup detail dengan peta. Dibuat untuk tes teknis Frontend Engineer (Sistem Manajemen Armada). Nama dan tampilannya sengaja netral, data diambil dari MBTA V3 API.
+Dashboard untuk memantau kendaraan MBTA (Boston) secara langsung, dengan menu samping: daftar kartu kendaraan, filter rute dan trip, pagination lengkap, popup detail dengan peta, peta seluruh armada, dan halaman penjelasan data. Tampilannya mengikuti tema panel Elsaku. Dibuat untuk tes teknis Frontend Engineer (Sistem Manajemen Armada). Nama dan tampilannya sengaja netral, data diambil dari MBTA V3 API.
 
 - Demo: https://tistow.github.io/fleet-management-frontend/
 - Video penjelasan: lihat email pengiriman
 
-![Grid kendaraan dengan pagination](docs/screenshot-grid.png)
+![Halaman Kendaraan dengan menu samping](docs/screenshot-grid.png)
+
+![Peta Armada](docs/screenshot-peta.png)
+
+## Halaman
+
+| Menu | Isi |
+|---|---|
+| Kendaraan | kartu kendaraan, filter Rute dan Trip, pagination, popup detail |
+| Peta Armada | semua kendaraan sesuai filter di satu peta, penanda berwarna menurut rute dan berputar menurut arah hadap, klik penanda membuka popup detail yang sama |
+| Tentang Data | sumber data MBTA, batas permintaan, cara kerja pagination, alasan Trip butuh Rute, teknologi |
+
+Menu samping bisa diciutkan jadi ikon di desktop, dan menjadi laci dengan tombol hamburger di HP (fokus terkunci di dalam laci, ESC menutup). Filter Rute dan Trip tetap saat berpindah antara Kendaraan dan Peta Armada.
 
 ## Menjalankan
 
@@ -16,7 +28,7 @@ npm ci
 npm run dev        # pengembangan lokal
 npm run build      # build produksi ke dist/
 npm run preview    # menjalankan hasil build
-npm test           # vitest (69 tes)
+npm test           # vitest (78 tes)
 npm run lint       # oxlint
 npm run typecheck  # tsc -b --noEmit
 ```
@@ -36,13 +48,17 @@ Variabel ini opsional. Key di aplikasi frontend ikut masuk ke bundle dan terliha
 ```
 src/
   api/          client.ts (fetch bertipe), errors.ts, jsonapi.ts, vehicles.ts, routes.ts, trips.ts
-  hooks/        useUrlState, useVehicles, useRouteOptions, useTripOptions,
+  hooks/        useUrlState, useFleet, useVehicles, useRouteOptions, useTripOptions,
                 useVehicleDetail, useRateLimitRetry
   components/   MultiSelect, Pagination, PageSizeSelect, StatusBadge, ErrorState,
                 StaleBanner, EmptyState, Skeletons, Spinner
+  layout/       AppShell (menu samping, laci HP, bar atas)
   features/vehicles/
                 VehiclesPage, VehicleFilters, VehicleGrid, VehicleCard,
-                VehicleDetailModal, VehicleMap
+                VehicleDetailModal, VehicleMap, vehicleIcon
+  features/map/ FleetMapPage, FleetMap (peta seluruh armada, lazy)
+  features/about/
+                DataInfoPage
   lib/          paginate, status, format, tripSelection
   types/        mbta.ts
 ```
@@ -50,16 +66,19 @@ src/
 `api/` mengenal MBTA, `hooks/` mengenal TanStack Query, `components/` generik tanpa pengetahuan MBTA, dan `features/vehicles/` merangkai semuanya.
 
 ```
-query string (route, trip, page, size, vehicle)
+query string (view, route, trip, page, size, vehicle)
         |
-  VehiclesPage -- useVehicles ---------+
-        |         useRouteOptions       |-- TanStack Query cache -- api/client.ts (fetch) -- MBTA V3
-        |         useTripOptions        |                           api/jsonapi.ts (parse)
-        |         useVehicleDetail -----+
-        +-- VehicleFilters (MultiSelect x2)
-        +-- VehicleGrid -> VehicleCard -> StatusBadge
-        +-- Pagination + PageSizeSelect   (paginate() di client)
-        +-- VehicleDetailModal -> VehicleMap (lazy: Leaflet + OpenStreetMap)
+  App (useFleet: satu query kendaraan) -- AppShell (menu samping + bar atas)
+        |         useRouteOptions       |
+        |         useTripOptions        |-- TanStack Query cache -- api/client.ts (fetch) -- MBTA V3
+        |         useVehicleDetail -----+                           api/jsonapi.ts (parse)
+        +-- view=kendaraan: VehiclesPage
+        |       +-- VehicleFilters (MultiSelect x2)
+        |       +-- VehicleGrid -> VehicleCard -> StatusBadge
+        |       +-- Pagination + PageSizeSelect   (paginate() di client)
+        +-- view=peta: FleetMapPage (lazy) -> FleetMap (Leaflet + OpenStreetMap)
+        +-- view=data: DataInfoPage (lazy)
+        +-- VehicleDetailModal -> VehicleMap (lazy), dibuka dari kartu maupun penanda peta
 ```
 
 ### Pengambilan data
@@ -82,9 +101,9 @@ API MBTA tidak mengirim total data, hanya link `first`, `next`, dan `last`. Kare
 
 ![Dropdown trip mengikuti rute](docs/screenshot-filter.png)
 
-### State di URL
+### State di URL dan perutean
 
-Filter, halaman, ukuran, dan kendaraan yang dibuka disimpan di query string (`?route=Red,1&trip=...&page=2&size=20&vehicle=y1841`), lewat hook `useUrlState` tanpa router. Tautan bisa dibagikan, tombol Back menutup popup detail dan kembali ke daftar, dan refresh di GitHub Pages aman karena tidak ada path selain `/`. Mengganti filter mengembalikan halaman ke 1.
+Halaman aktif, filter, halaman, ukuran, dan kendaraan yang dibuka disimpan di query string (`?view=peta&route=Red,1&trip=...&page=2&size=20&vehicle=y1841`), lewat hook `useUrlState` tanpa router. `view` bernilai `kendaraan` (bawaan, tidak ditulis di URL), `peta`, atau `data`. Item menu adalah tautan biasa yang membawa filter, jadi bisa dibuka di tab baru, dan berpindah halaman menutup popup tetapi tetap membawa filter. Satu query kendaraan (`useFleet`) dipakai bersama oleh kartu dan peta, sehingga berpindah antara keduanya tidak menambah request. Tautan bisa dibagikan, tombol Back menutup popup detail dan kembali ke daftar, dan refresh di GitHub Pages aman karena tidak ada path selain `/`. Mengganti filter mengembalikan halaman ke 1.
 
 ### Error dan batas permintaan
 
@@ -92,9 +111,9 @@ Filter, halaman, ukuran, dan kendaraan yang dibuka disimpan di query string (`?r
 
 ### Peta
 
-`VehicleMap` dimuat dengan `React.lazy` hanya saat popup dibuka, jadi Leaflet (sekitar 155 KB) tidak ikut bundle awal. Penanda memakai `DivIcon` berwarna sesuai rute dan berputar mengikuti arah hadap, sehingga masalah ikon PNG bawaan Leaflet di bundler tidak muncul. Peta bergeser mengikuti posisi saat data diperbarui (detail ikut dimuat ulang tiap 30 detik selama popup terbuka), ukurannya dihitung ulang saat popup selesai tampil, kegagalan memuat tile ditampilkan sebagai pemberitahuan kecil, dan bila chunk peta gagal dimuat popup tetap bisa dipakai dengan tombol "Coba lagi".
+`FleetMap` (Peta Armada) menaruh semua kendaraan yang sedang disaring sebagai penanda `DivIcon` yang sama dengan peta detail, memuat ulang batasnya hanya saat filter berubah (bukan tiap 30 detik, supaya peta yang sedang digeser tidak melompat), dan juga lazy. `VehicleMap` dimuat dengan `React.lazy` hanya saat popup dibuka, jadi Leaflet (sekitar 155 KB) tidak ikut bundle awal. Penanda memakai `DivIcon` berwarna sesuai rute dan berputar mengikuti arah hadap, sehingga masalah ikon PNG bawaan Leaflet di bundler tidak muncul. Peta bergeser mengikuti posisi saat data diperbarui (detail ikut dimuat ulang tiap 30 detik selama popup terbuka), ukurannya dihitung ulang saat popup selesai tampil, kegagalan memuat tile ditampilkan sebagai pemberitahuan kecil, dan bila chunk peta gagal dimuat popup tetap bisa dipakai dengan tombol "Coba lagi".
 
-![Popup detail dengan peta](docs/screenshot-detail.jpg)
+![Popup detail dengan peta](docs/screenshot-detail.png)
 
 ## Checklist fitur
 
@@ -106,9 +125,10 @@ Filter, halaman, ukuran, dan kendaraan yang dibuka disimpan di query string (`?r
 | Filter Trip mengikuti route | `hooks/useTripOptions.ts`, `lib/tripSelection.ts`, `api/trips.ts` |
 | Pagination: rentang, jumlah halaman, pilihan per halaman, pindah halaman | `lib/paginate.ts`, `components/Pagination.tsx`, `components/PageSizeSelect.tsx` |
 | Popup detail kendaraan dengan peta | `VehicleDetailModal.tsx`, `VehicleMap.tsx`, `hooks/useVehicleDetail.ts` |
+| Menu samping dan peta armada (tambahan) | `layout/AppShell.tsx`, `features/map/`, `features/about/` |
 | Loading, kosong, dan error | `components/Skeletons.tsx`, `EmptyState.tsx`, `ErrorState.tsx`, `StaleBanner.tsx` |
-| Responsif | grid 1 sampai 4 kolom, popup layar penuh di HP |
-| TypeScript dan tes | `strict`, 69 tes (vitest + Testing Library), lint dan typecheck di CI |
+| Responsif | grid 1 sampai 4 kolom, menu samping jadi laci di HP, popup layar penuh di HP |
+| TypeScript dan tes | `strict`, 78 tes (vitest + Testing Library), lint dan typecheck di CI |
 | Deploy | GitHub Pages lewat `.github/workflows/deploy.yml` |
 
 ![Tampilan HP](docs/screenshot-mobile.png)
