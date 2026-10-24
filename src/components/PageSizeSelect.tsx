@@ -9,7 +9,7 @@ export default function PageSizeSelect({ size, onChange }: { size: number; onCha
         <select
           value={size}
           onChange={(e) => onChange(Number(e.target.value))}
-          className="h-10 appearance-none rounded-lg border border-line bg-paper pl-3 pr-9 text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          className="h-10 appearance-none rounded-xl border border-line bg-paper pl-3 pr-9 text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
         >
           {PAGE_SIZES.map((n) => (
             <option key={n} value={n}>

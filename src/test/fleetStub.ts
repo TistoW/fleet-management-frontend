@@ -1,9 +1,9 @@
 import { vi } from 'vitest'
 
-const vehicle = (id: string, label: string, lat: number | null, lng: number | null, route: string) => ({
+const vehicle = (id: string, label: string, lat: number | null, lng: number | null, route: string, status = 'IN_TRANSIT_TO') => ({
   id,
   type: 'vehicle',
-  attributes: { label, current_status: 'IN_TRANSIT_TO', latitude: lat, longitude: lng, bearing: 90, direction_id: 0, occupancy_status: null, updated_at: '2026-10-22T23:14:52-04:00', carriages: [] },
+  attributes: { label, current_status: status, latitude: lat, longitude: lng, bearing: 90, direction_id: 0, occupancy_status: null, updated_at: '2026-10-22T23:14:52-04:00', carriages: [] },
   relationships: { route: { data: { id: route, type: 'route' } } },
 })
 
@@ -15,15 +15,26 @@ export const fleetDoc = {
   included: [routeRed],
 }
 
-export function stubFleetFetch() {
+/** Four vehicles: two moving, one arriving, one stopped. */
+export const mixedFleetDoc = {
+  data: [
+    vehicle('m1', '2001', 42.37, -71.12, 'Red'),
+    vehicle('m2', '2002', 42.38, -71.1, 'Red', 'INCOMING_AT'),
+    vehicle('m3', '2003', 42.39, -71.09, 'Red', 'STOPPED_AT'),
+    vehicle('m4', '2004', 42.4, -71.08, 'Red'),
+  ],
+  included: [routeRed],
+}
+
+export function stubFleetFetch(doc: typeof fleetDoc = fleetDoc) {
   const fetchMock = vi.fn(async (url: URL) => {
     const path = url.pathname
     if (path === '/routes' || path === '/trips') return new Response(JSON.stringify({ data: [] }))
     if (path.startsWith('/vehicles/')) {
-      const one = fleetDoc.data.find((v) => v.id === path.split('/')[2])
-      return new Response(JSON.stringify({ data: one, included: fleetDoc.included }))
+      const one = doc.data.find((v) => v.id === path.split('/')[2])
+      return new Response(JSON.stringify({ data: one, included: doc.included }))
     }
-    return new Response(JSON.stringify(fleetDoc))
+    return new Response(JSON.stringify(doc))
   })
   vi.stubGlobal('fetch', fetchMock)
   return fetchMock

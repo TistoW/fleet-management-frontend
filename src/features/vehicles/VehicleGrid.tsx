@@ -1,5 +1,5 @@
 import type { VehicleView } from '../../api/vehicles'
-import EmptyState from '../../components/EmptyState'
+import EmptyState, { primaryBtn } from '../../components/EmptyState'
 import ErrorState from '../../components/ErrorState'
 import { VehicleCardSkeleton } from '../../components/Skeletons'
 import VehicleCard from './VehicleCard'
@@ -13,9 +13,10 @@ interface Props {
   onClearFilters?: () => void
   onRetry: () => void
   onOpen: (id: string) => void
+  onShowOnMap?: (id: string) => void
 }
 
-const GRID = 'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+const GRID = 'grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
 
 export default function VehicleGrid({
   vehicles,
@@ -26,6 +27,7 @@ export default function VehicleGrid({
   onClearFilters,
   onRetry,
   onOpen,
+  onShowOnMap,
 }: Props) {
   if (isPending) {
     return (
@@ -41,14 +43,10 @@ export default function VehicleGrid({
     return hasFilters ? (
       <EmptyState
         title="Tidak ada kendaraan yang cocok"
-        message="Coba ubah atau hapus filter."
+        message="Coba ubah atau hapus filter supaya kendaraan muncul lagi."
         action={
-          <button
-            type="button"
-            onClick={onClearFilters}
-            className="rounded-lg border border-line px-4 py-2 text-sm font-medium hover:bg-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-          >
-            Hapus semua filter
+          <button type="button" onClick={onClearFilters} className={primaryBtn}>
+            Hapus filter
           </button>
         }
       />
@@ -63,7 +61,7 @@ export default function VehicleGrid({
     <ul className={GRID}>
       {vehicles.map((v) => (
         <li key={v.id}>
-          <VehicleCard vehicle={v} onOpen={onOpen} />
+          <VehicleCard vehicle={v} onOpen={onOpen} onShowOnMap={onShowOnMap} />
         </li>
       ))}
     </ul>

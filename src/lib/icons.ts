@@ -26,6 +26,12 @@ import databaseLinear from '@iconify-icons/solar/database-linear'
 import closeCircleLinear from '@iconify-icons/solar/close-circle-linear'
 import hamburgerMenuLinear from '@iconify-icons/solar/hamburger-menu-linear'
 import refreshLinear from '@iconify-icons/solar/refresh-linear'
+import dangerTriangleLinear from '@iconify-icons/solar/danger-triangle-linear'
+import routing2Linear from '@iconify-icons/solar/routing-2-linear'
+import mapArrowRightLinear from '@iconify-icons/solar/map-arrow-right-linear'
+import checkSquareLinear from '@iconify-icons/solar/check-square-linear'
+import stopCircleLinear from '@iconify-icons/solar/stop-circle-linear'
+import questionCircleLinear from '@iconify-icons/solar/question-circle-linear'
 
 // Registered up front so no icon is fetched from api.iconify.design at runtime.
 const icons = {
@@ -56,6 +62,12 @@ const icons = {
   'solar:close-circle-linear': closeCircleLinear,
   'solar:hamburger-menu-linear': hamburgerMenuLinear,
   'solar:refresh-linear': refreshLinear,
+  'solar:danger-triangle-linear': dangerTriangleLinear,
+  'solar:routing-2-linear': routing2Linear,
+  'solar:map-arrow-right-linear': mapArrowRightLinear,
+  'solar:check-square-linear': checkSquareLinear,
+  'solar:stop-circle-linear': stopCircleLinear,
+  'solar:question-circle-linear': questionCircleLinear,
 }
 
 for (const [name, data] of Object.entries(icons)) addIcon(name, data)

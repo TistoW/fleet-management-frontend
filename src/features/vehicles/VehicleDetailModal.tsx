@@ -24,8 +24,8 @@ interface Props {
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="border-t border-line pt-3">
-      <h3 className="mb-1 text-sm font-semibold">{title}</h3>
+    <section className="rounded-xl bg-canvas/70 px-4 py-3">
+      <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">{title}</h3>
       <dl className="divide-y divide-line/60 text-sm">{children}</dl>
     </section>
   )
@@ -86,9 +86,9 @@ export default function VehicleDetailModal({ id, preview, onClose, autoRefresh }
         onClose()
       }}
       onClick={(e) => e.target === ref.current && onClose()}
-      className="m-auto h-dvh max-h-dvh w-full max-w-none flex-col overflow-hidden bg-paper p-0 text-ink backdrop:bg-ink/40 open:flex sm:h-auto sm:max-h-[90dvh] sm:max-w-3xl sm:rounded-xl sm:shadow-lg"
+      className="m-auto h-dvh max-h-dvh w-full max-w-none flex-col overflow-hidden bg-paper p-0 text-ink backdrop:bg-ink/40 open:flex sm:h-auto sm:max-h-[90dvh] sm:max-w-3xl sm:rounded-2xl sm:shadow-xl"
     >
-      <div className="flex shrink-0 items-start justify-between gap-4 border-b border-line px-5 py-4">
+      <div className="flex shrink-0 items-start justify-between gap-4 border-b border-line px-6 py-5">
         <div>
           <h2 id={titleId} className="font-mono text-xl font-semibold tabular-nums">
             {v ? `Kendaraan ${v.label}` : 'Memuat kendaraan'}
@@ -105,9 +105,9 @@ export default function VehicleDetailModal({ id, preview, onClose, autoRefresh }
           autoFocus
           onClick={onClose}
           aria-label="Tutup"
-          className="rounded-lg p-1 text-ink-muted hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          className="rounded-xl p-1.5 text-ink-muted hover:bg-ink/5 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
         >
-          <Icon icon="solar:close-circle-bold" className="size-7" aria-hidden />
+          <Icon icon="solar:close-circle-linear" className="size-8" aria-hidden />
         </button>
       </div>
 
@@ -117,8 +117,8 @@ export default function VehicleDetailModal({ id, preview, onClose, autoRefresh }
           <ErrorState error={q.error} onRetry={retry} />
         </div>
       ) : (
-        <div className="grid gap-5 p-5 sm:grid-cols-2">
-          <div className="flex flex-col gap-4">
+        <div className="grid gap-6 p-6 sm:grid-cols-2">
+          <div className="flex flex-col gap-3">
             {v ? (
               <>
                 <StatusBadge status={v.status} />
@@ -204,7 +204,7 @@ export default function VehicleDetailModal({ id, preview, onClose, autoRefresh }
               </>
             )}
           </div>
-          <div className="min-h-64">
+          <div className="min-h-64 overflow-hidden rounded-xl">
             {v && v.lat != null && v.lng != null ? (
               <ErrorBoundary
                 fallback={(reset) => (

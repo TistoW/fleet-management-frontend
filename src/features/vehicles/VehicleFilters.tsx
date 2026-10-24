@@ -1,18 +1,21 @@
 import { useEffect, useMemo, useState } from 'react'
+import ActiveFilters, { type Chip } from '../../components/ActiveFilters'
+import { STATUS_FILTER_LABEL } from '../../lib/fleetStats'
 import { describeError } from '../../api/errors'
 import type { RouteView } from '../../api/routes'
 import type { TripView } from '../../api/trips'
 import MultiSelect, { type Option } from '../../components/MultiSelect'
 import { useRouteOptions } from '../../hooks/useRouteOptions'
 import { useTripOptions } from '../../hooks/useTripOptions'
-import type { UrlState } from '../../hooks/useUrlState'
+import type { StatusFilter, UrlState } from '../../hooks/useUrlState'
 import { useVehicles } from '../../hooks/useVehicles'
 import { pruneTrips } from '../../lib/tripSelection'
 
 interface Props {
   routes: string[]
   trips: string[]
-  onChange: (patch: Partial<Pick<UrlState, 'routes' | 'trips'>>, opts?: { replace?: boolean }) => void
+  status?: StatusFilter | null
+  onChange: (patch: Partial<Pick<UrlState, 'routes' | 'trips' | 'status'>>, opts?: { replace?: boolean }) => void
   /** Routes seen on vehicles, used to name chips from the URL before /routes has loaded them. */
   knownRoutes?: RouteView[]
 }
@@ -27,7 +30,7 @@ const toOption = (r: RouteView): Option => ({
 const RUNNING = 'Sedang berjalan'
 const ALL = 'Semua trip hari ini'
 
-export default function VehicleFilters({ routes, trips, onChange, knownRoutes = [] }: Props) {
+export default function VehicleFilters({ routes, trips, status = null, onChange, knownRoutes = [] }: Props) {
   const q = useRouteOptions()
   const options = useMemo(() => q.routes.map(toOption), [q.routes])
   const known = useMemo(() => knownRoutes.map(toOption), [knownRoutes])
@@ -105,9 +108,20 @@ export default function VehicleFilters({ routes, trips, onChange, knownRoutes = 
 
   const noRoute = routes.length === 0
 
+  const chips: Chip[] = [
+    ...routes.map((id) => {
+      const r = routeById.get(id)
+      return { key: `r${id}`, label: r?.name ?? id, swatch: r?.color, onRemove: () => changeRoutes(routes.filter((x) => x !== id)) }
+    }),
+    ...tripChips.length === trips.length
+      ? tripChips.map((o) => ({ key: `t${o.value}`, label: o.label, swatch: o.swatch, onRemove: () => onChange({ trips: trips.filter((x) => x !== o.value) }) }))
+      : trips.map((id) => ({ key: `t${id}`, label: `Trip ${id}`, onRemove: () => onChange({ trips: trips.filter((x) => x !== id) }) })),
+    ...(status ? [{ key: 's', label: STATUS_FILTER_LABEL[status], onRemove: () => onChange({ status: null }) }] : []),
+  ]
+
   return (
-    <div className="mb-5">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="flex flex-col gap-3">
+      <div className="grid gap-3 rounded-2xl border border-line bg-paper p-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1.2fr]">
         <MultiSelect
           label="Rute"
           placeholder="Semua rute"
@@ -115,6 +129,7 @@ export default function VehicleFilters({ routes, trips, onChange, knownRoutes = 
           selected={routes}
           selectedOptions={known}
           onChange={changeRoutes}
+          hideChips
           isLoading={q.isPending}
           error={q.isError && options.length === 0 ? describeError(q.error).title : undefined}
           onRetry={() => void q.refetch()}
@@ -130,6 +145,7 @@ export default function VehicleFilters({ routes, trips, onChange, knownRoutes = 
           selected={trips}
           selectedOptions={tripChips}
           onChange={(next) => onChange({ trips: next })}
+          hideChips
           disabled={noRoute}
           disabledHint="Pilih rute dulu untuk melihat trip"
           isLoading={!noRoute && t.all.isPending && tripOptions.length === 0}
@@ -140,10 +156,11 @@ export default function VehicleFilters({ routes, trips, onChange, knownRoutes = 
           onLoadMore={() => void t.all.fetchNextPage()}
           emptyText="Belum ada trip hari ini untuk rute ini"
         />
+        <p className="self-end pb-2 text-xs text-ink-muted max-lg:sm:col-span-2" aria-live="polite">
+          {notice || (noRoute ? '' : 'Trip mempersempit hasil di dalam rute yang dipilih.')}
+        </p>
       </div>
-      <p className="mt-2 min-h-5 text-xs text-ink-muted" aria-live="polite">
-        {notice || (noRoute ? '' : 'Trip mempersempit hasil di dalam rute yang dipilih')}
-      </p>
+      <ActiveFilters chips={chips} onClear={() => onChange({ routes: [], trips: [], status: null })} />
     </div>
   )
 }

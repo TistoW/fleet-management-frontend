@@ -8,7 +8,7 @@ interface Props {
 }
 
 const btn =
-  'inline-flex h-9 min-w-9 items-center justify-center rounded-lg border px-2 text-sm font-medium tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:cursor-not-allowed disabled:text-ink-muted disabled:opacity-50'
+  'inline-flex h-10 min-w-10 items-center justify-center rounded-xl border px-2 text-sm font-medium tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:cursor-not-allowed disabled:text-ink-muted disabled:opacity-50'
 const idle = 'border-line bg-paper hover:bg-canvas disabled:hover:bg-paper'
 const active = 'border-accent bg-accent text-white hover:bg-accent-strong'
 
@@ -16,8 +16,8 @@ export default function Pagination({ page, pageCount, onPageChange }: Props) {
   const first = page <= 1
   const last = page >= pageCount
   return (
-    <nav aria-label="Navigasi halaman" className="flex flex-wrap items-center justify-between gap-3">
-      <p className="text-sm text-ink-muted tabular-nums">Halaman {page} dari {pageCount}</p>
+    <nav aria-label="Navigasi halaman" className="flex flex-wrap items-center gap-3">
+      <p className="hidden text-sm text-ink-muted tabular-nums 2xl:block">Halaman {page} dari {pageCount}</p>
       <div className="flex items-center gap-1">
         <button type="button" className={`${btn} ${idle} hidden sm:inline-flex`} disabled={first} onClick={() => onPageChange(1)} aria-label="Halaman pertama">
           <Icon icon="solar:double-alt-arrow-left-linear" className="size-4" aria-hidden />

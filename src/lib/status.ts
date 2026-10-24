@@ -1,19 +1,22 @@
 export interface StatusInfo {
   label: string
+  /** Which stat card / quick filter this status belongs to. */
+  group: 'berjalan' | 'berhenti' | null
   icon: string
   /** Tailwind classes for the badge. */
   tone: string
 }
 
 const STATUS: Record<string, StatusInfo> = {
-  IN_TRANSIT_TO: { label: 'Menuju halte', icon: 'solar:routing-2-bold', tone: 'bg-moving-soft text-moving' },
-  INCOMING_AT: { label: 'Segera tiba', icon: 'solar:map-arrow-right-bold', tone: 'bg-arriving-soft text-arriving' },
-  STOPPED_AT: { label: 'Berhenti di halte', icon: 'solar:stop-circle-bold', tone: 'bg-stopped-soft text-stopped' },
+  IN_TRANSIT_TO: { label: 'Menuju halte', group: 'berjalan', icon: 'solar:routing-2-linear', tone: 'bg-moving-soft text-moving' },
+  INCOMING_AT: { label: 'Segera tiba', group: 'berjalan', icon: 'solar:map-arrow-right-linear', tone: 'bg-arriving-soft text-arriving' },
+  STOPPED_AT: { label: 'Berhenti di halte', group: 'berhenti', icon: 'solar:stop-circle-linear', tone: 'bg-stopped-soft text-stopped' },
 }
 
 const UNKNOWN: StatusInfo = {
   label: 'Status tidak diketahui',
-  icon: 'solar:question-circle-bold',
+  group: null,
+  icon: 'solar:question-circle-linear',
   tone: 'bg-canvas text-ink-muted',
 }
 

@@ -14,7 +14,7 @@ export default function ErrorState({ error, onRetry }: { error: unknown; onRetry
   }, [limited])
 
   return (
-    <div role="alert" className="flex flex-col items-start gap-3 rounded-lg border border-line bg-paper p-8">
+    <div role="alert" className="flex flex-col items-start gap-3 m-4 rounded-2xl border border-line bg-paper p-8">
       <Icon icon="solar:danger-triangle-bold-duotone" className="size-10 text-danger" aria-hidden />
       <div>
         <h2 className="font-semibold">{info.title}</h2>
@@ -25,7 +25,7 @@ export default function ErrorState({ error, onRetry }: { error: unknown; onRetry
       <button
         type="button"
         onClick={onRetry}
-        className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+        className="rounded-xl bg-accent px-4 py-2.5 text-sm font-medium text-white hover:bg-accent-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
       >
         {info.action}
       </button>

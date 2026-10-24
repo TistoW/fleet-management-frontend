@@ -98,6 +98,12 @@ export default function AppShell({ view, hrefFor, onNavigate, live, children }: 
 
   return (
     <div className="flex h-dvh overflow-hidden bg-canvas">
+      <a
+        href="#konten"
+        className="fixed left-3 top-3 z-50 -translate-y-20 rounded-xl bg-accent px-4 py-2 text-sm font-medium text-white focus:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+      >
+        Lewati ke konten
+      </a>
       {drawer && <div className="fixed inset-0 z-30 bg-ink/40 md:hidden" onClick={() => setDrawer(false)} aria-hidden />}
       <aside
         ref={aside}
@@ -174,7 +180,7 @@ export default function AppShell({ view, hrefFor, onNavigate, live, children }: 
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col" inert={drawer}>
-        <header className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 border-b border-line bg-paper px-4 py-2 sm:px-6 md:min-h-14">
+        <header className="relative flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 border-b border-line bg-paper px-4 py-2 sm:px-6 md:min-h-14">
           <button
             ref={burger}
             type="button"
@@ -188,9 +194,14 @@ export default function AppShell({ view, hrefFor, onNavigate, live, children }: 
           </button>
           <h1 className="min-w-0 flex-1 truncate text-sm font-semibold">{title}</h1>
           {live && <Toolbar {...live} />}
+          {live?.isFetching && live.updatedAt > 0 && (
+            <div className="absolute inset-x-0 bottom-0 h-0.5 overflow-hidden bg-accent-soft" aria-hidden>
+              <div className="bar-slide h-full w-1/3 bg-accent" />
+            </div>
+          )}
         </header>
-        <main className="min-h-0 flex-1 overflow-y-auto">
-          <div className="mx-auto flex min-h-full max-w-7xl flex-col px-4 py-6 sm:px-6">{children}</div>
+        <main id="konten" tabIndex={-1} className="min-h-0 flex-1 overflow-y-auto outline-none">
+          <div className={`mx-auto flex max-w-7xl flex-col px-4 py-5 sm:px-6 ${view === 'data' ? 'min-h-full' : 'h-full'}`}>{children}</div>
         </main>
       </div>
     </div>
@@ -198,6 +209,21 @@ export default function AppShell({ view, hrefFor, onNavigate, live, children }: 
 }
 
 function Toolbar({ updatedAt, auto, onAuto, isFetching, onRefresh }: Live) {
+  const [clicked, setClicked] = useState(false)
+  const [done, setDone] = useState(false)
+  const sawFetch = useRef(false)
+
+  // "Muat ulang" answers with a short message once the request it started has finished.
+  useEffect(() => {
+    if (isFetching) sawFetch.current = true
+    else if (clicked && sawFetch.current) {
+      setClicked(false)
+      setDone(true)
+      const id = setTimeout(() => setDone(false), 2500)
+      return () => clearTimeout(id)
+    }
+  }, [isFetching, clicked])
+
   return (
     <>
       {/* On phones the status line drops to its own row under the title and the button. */}
@@ -210,13 +236,21 @@ function Toolbar({ updatedAt, auto, onAuto, isFetching, onRefresh }: Live) {
       </div>
       <button
         type="button"
-        onClick={onRefresh}
+        onClick={() => {
+          sawFetch.current = false
+          setClicked(true)
+          setDone(false)
+          onRefresh()
+        }}
         disabled={isFetching}
-        className="inline-flex items-center gap-2 rounded-lg border border-line bg-paper px-3 py-1.5 text-sm font-medium text-ink hover:bg-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-60"
+        className="inline-flex items-center gap-2 rounded-xl border border-line bg-paper px-3.5 py-2 text-sm font-medium text-ink hover:bg-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-60"
       >
         {isFetching ? <Spinner /> : <Icon icon="solar:refresh-linear" className="size-4" aria-hidden />}
         Muat ulang
       </button>
+      <span role="status" aria-live="polite" className="text-sm text-moving max-sm:hidden">
+        {done ? 'Data sudah diperbarui' : ''}
+      </span>
     </>
   )
 }

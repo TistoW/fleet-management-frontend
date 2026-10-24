@@ -27,3 +27,11 @@
 body {
   @apply bg-canvas font-sans text-ink antialiased;
 }
+
+/* Garis kemajuan tipis di bawah top bar saat data dimuat ulang di latar. */
+@keyframes bar-slide {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(350%); }
+}
+.bar-slide { animation: bar-slide 1.1s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .bar-slide { animation: none; transform: none; width: 100%; opacity: .5; } }

@@ -29,6 +29,8 @@ interface Props {
   isLoadingMore?: boolean
   onLoadMore?: () => void
   emptyText?: string
+  /** The page shows its own removable chips. */
+  hideChips?: boolean
 }
 
 /** While searching, stop auto-loading after this many pages and offer a button. */
@@ -40,6 +42,7 @@ export default function MultiSelect({
   selected,
   onChange,
   placeholder = 'Pilih',
+  hideChips,
   selectedOptions = [],
   disabled,
   disabledHint,
@@ -188,7 +191,7 @@ export default function MultiSelect({
 
   return (
     <div ref={root} className="relative">
-      <span className="mb-1 block text-sm font-medium">{label}</span>
+      <span className="mb-1 block text-xs font-medium text-ink-muted">{label}</span>
       <button
         ref={trigger}
         type="button"
@@ -205,7 +208,7 @@ export default function MultiSelect({
             setOpen(true)
           }
         }}
-        className="flex h-10 w-full items-center justify-between gap-2 rounded-lg border border-line bg-paper px-3 text-left text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:cursor-not-allowed disabled:bg-canvas disabled:text-ink-muted"
+        className="flex h-11 w-full items-center justify-between gap-2 rounded-xl border border-line bg-paper px-3.5 text-left text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:cursor-not-allowed disabled:bg-canvas disabled:text-ink-muted"
       >
         <span className={selected.length ? 'text-ink' : 'text-ink-muted'}>{summary}</span>
         <Icon icon="solar:alt-arrow-down-linear" className="size-4 text-ink-muted" aria-hidden />
@@ -216,7 +219,7 @@ export default function MultiSelect({
         </p>
       )}
 
-      {chips.length > 0 && (
+      {chips.length > 0 && !hideChips && (
         <ul aria-label={`${label} terpilih`} className="mt-2 flex flex-wrap gap-1.5">
           {chips.map((c) => (
             <li

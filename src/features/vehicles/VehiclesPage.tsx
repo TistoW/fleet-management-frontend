@@ -1,11 +1,12 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import type { RouteView } from '../../api/routes'
 import PageSizeSelect from '../../components/PageSizeSelect'
 import Pagination from '../../components/Pagination'
-import Spinner from '../../components/Spinner'
 import StaleBanner from '../../components/StaleBanner'
+import StatCard, { StatCardSkeleton } from '../../components/StatCard'
 import type { FleetQuery, SetUrl } from '../../hooks/useFleet'
-import type { UrlState } from '../../hooks/useUrlState'
+import type { StatusFilter, UrlState } from '../../hooks/useUrlState'
+import { applyStatus, fleetStats } from '../../lib/fleetStats'
 import { pageAfterSizeChange, paginate, rangeText } from '../../lib/paginate'
 import VehicleFilters from './VehicleFilters'
 import VehicleGrid from './VehicleGrid'
@@ -18,13 +19,21 @@ interface Props {
 
 export default function VehiclesPage({ url, setUrl, fleet }: Props) {
   const { data, isPending, isFetching, isError, error, refetch, dataUpdatedAt, countdown } = fleet
-  const hasFilters = url.routes.length > 0 || url.trips.length > 0
-  const result = paginate(data ?? [], url.page, url.size)
+  const hasFilters = url.routes.length > 0 || url.trips.length > 0 || !!url.status
+  const stats = useMemo(() => fleetStats(data ?? []), [data])
+  const shown = useMemo(() => applyStatus(data ?? [], url.status), [data, url.status])
+  const result = paginate(shown, url.page, url.size)
+  const scroller = useRef<HTMLDivElement>(null)
 
   // Filters or the live fleet shrank: bring the URL back to a page that exists.
   useEffect(() => {
     if (data && result.page !== url.page) setUrl({ page: result.page }, { replace: true })
   }, [data, result.page, url.page, setUrl])
+
+  // Only the list scrolls, so a new page starts at its top.
+  useEffect(() => {
+    scroller.current?.scrollTo?.({ top: 0 })
+  }, [result.page, url.size, url.status])
 
   const knownRoutes = useMemo(() => {
     const seen = new Map<string, RouteView>()
@@ -32,38 +41,67 @@ export default function VehiclesPage({ url, setUrl, fleet }: Props) {
     return [...seen.values()]
   }, [data])
 
-  const showBars = !!data && data.length > 0
+  const toggle = (s: StatusFilter) => setUrl({ status: url.status === s ? null : s })
+  const showBars = !!data && shown.length > 0
 
   return (
-    <>
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
+      <p className="text-sm text-ink-muted">Pantau posisi dan status bus yang sedang beroperasi. Klik kartu angka untuk menyaring.</p>
       {isError && data && <StaleBanner updatedAt={dataUpdatedAt} countdown={countdown} onRetry={() => void refetch()} />}
-      <VehicleFilters routes={url.routes} trips={url.trips} onChange={setUrl} knownRoutes={knownRoutes} />
-      {data && (
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <p className="flex items-center gap-2 text-sm text-ink-muted tabular-nums" aria-live="polite">
-            {rangeText(result.from, result.to, result.total)}
-            {isFetching && <Spinner />}
-          </p>
-          {showBars && <PageSizeSelect size={url.size} onChange={(size) => setUrl({ size, page: pageAfterSizeChange(result.from, size) })} />}
+
+      <ul aria-label="Ringkasan armada" className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 md:mx-0 md:px-0 [&>li]:flex [&>li]:flex-1 [&>li]:snap-start">
+        {data ? (
+          <>
+            <li>
+              <StatCard icon="solar:bus-linear" tint="bg-accent-soft text-accent" label="Total kendaraan" value={stats.total} active={!url.status} onClick={() => setUrl({ status: null })} />
+            </li>
+            <li>
+              <StatCard icon="solar:routing-2-linear" tint="bg-moving-soft text-moving" label="Sedang berjalan" value={stats.berjalan} active={url.status === 'berjalan'} onClick={() => toggle('berjalan')} />
+            </li>
+            <li>
+              <StatCard icon="solar:stop-circle-linear" tint="bg-stopped-soft text-stopped" label="Berhenti di halte" value={stats.berhenti} active={url.status === 'berhenti'} onClick={() => toggle('berhenti')} />
+            </li>
+            <li>
+              <StatCard icon="solar:map-point-wave-linear" tint="bg-arriving-soft text-arriving" label="Rute aktif" value={stats.routes} />
+            </li>
+          </>
+        ) : (
+          [0, 1, 2, 3].map((i) => (
+            <li key={i}>
+              <StatCardSkeleton />
+            </li>
+          ))
+        )}
+      </ul>
+
+      <VehicleFilters routes={url.routes} trips={url.trips} status={url.status} onChange={setUrl} knownRoutes={knownRoutes} />
+
+      <section aria-label="Daftar kendaraan" className="flex min-h-[22rem] flex-1 flex-col overflow-hidden rounded-2xl border border-line bg-paper">
+        <div ref={scroller} className={`flex min-h-0 flex-1 flex-col overflow-y-auto ${isFetching && data ? 'opacity-70 transition-opacity' : ''}`}>
+          <VehicleGrid
+            vehicles={data && result.pageItems}
+            isPending={isPending}
+            error={error}
+            skeletonCount={url.size}
+            hasFilters={hasFilters}
+            onClearFilters={() => setUrl({ routes: [], trips: [], status: null })}
+            onRetry={() => void refetch()}
+            onOpen={(id) => setUrl({ vehicle: id })}
+            onShowOnMap={(id) => setUrl({ view: 'peta', focus: id })}
+          />
         </div>
-      )}
-      <div className={isFetching && data ? 'opacity-60 transition-opacity' : undefined}>
-        <VehicleGrid
-          vehicles={data && result.pageItems}
-          isPending={isPending}
-          error={error}
-          skeletonCount={url.size}
-          hasFilters={hasFilters}
-          onClearFilters={() => setUrl({ routes: [], trips: [] })}
-          onRetry={() => void refetch()}
-          onOpen={(id) => setUrl({ vehicle: id })}
-        />
-      </div>
-      {showBars && (
-        <div className="mt-6">
-          <Pagination page={result.page} pageCount={result.pageCount} onPageChange={(page) => setUrl({ page })} />
-        </div>
-      )}
-    </>
+        {data && (
+          <footer className="flex shrink-0 flex-wrap items-center justify-between gap-x-6 gap-y-2 border-t border-line bg-paper px-4 py-2.5">
+            <div className="flex items-center gap-4">
+              <p className="text-sm text-ink-muted tabular-nums" aria-live="polite">
+                {rangeText(result.from, result.to, result.total)}
+              </p>
+              {showBars && <PageSizeSelect size={url.size} onChange={(size) => setUrl({ size, page: pageAfterSizeChange(result.from, size) })} />}
+            </div>
+            {showBars && <Pagination page={result.page} pageCount={result.pageCount} onPageChange={(page) => setUrl({ page })} />}
+          </footer>
+        )}
+      </section>
+    </div>
   )
 }

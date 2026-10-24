@@ -9,6 +9,8 @@ interface Props {
   vehicles: VehicleView[]
   /** Changes when the filter changes; null while the list is a stale placeholder. The map re-fits only then. */
   fitKey: string | null
+  /** Vehicle to centre on, from "Lihat di peta". */
+  focusId?: string | null
   onOpen: (id: string) => void
 }
 
@@ -42,13 +44,27 @@ function Remeasure() {
   return null
 }
 
-export default function FleetMap({ vehicles, fitKey, onOpen }: Props) {
+/** Centre on one vehicle once; later refreshes do not pull the map back. */
+function Focus({ target }: { target?: [number, number] }) {
+  const map = useMap()
+  const done = useRef(false)
+  useEffect(() => {
+    if (!target || done.current) return
+    done.current = true
+    map.setView(target, 16, { animate: false })
+  }, [map, target])
+  return null
+}
+
+export default function FleetMap({ vehicles, fitKey, focusId, onOpen }: Props) {
   const [tileFailed, setTileFailed] = useState(false)
   const placed = useMemo(() => vehicles.filter((v) => v.lat != null && v.lng != null), [vehicles])
+  const focus = placed.find((v) => v.id === focusId)
+  const focusAt = useMemo((): [number, number] | undefined => (focus ? [focus.lat!, focus.lng!] : undefined), [focus?.id]) // eslint-disable-line react-hooks/exhaustive-deps
   const points = useMemo(() => placed.map((v): [number, number] => [v.lat!, v.lng!]), [placed])
 
   return (
-    <div className="absolute inset-0 overflow-hidden rounded-xl border border-line">
+    <div className="absolute inset-0 overflow-hidden rounded-2xl border border-line">
       <MapContainer center={BOSTON} zoom={11} className="size-full">
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -64,7 +80,8 @@ export default function FleetMap({ vehicles, fitKey, onOpen }: Props) {
             eventHandlers={{ click: () => onOpen(v.id) }}
           />
         ))}
-        <FitBounds points={points} fitKey={fitKey} />
+        <FitBounds points={points} fitKey={focus ? null : fitKey} />
+        <Focus target={focusAt} />
         <Remeasure />
       </MapContainer>
       {tileFailed && (

@@ -3,9 +3,9 @@ import type { ReactNode } from 'react'
 
 function Block({ icon, title, children }: { icon: string; title: string; children: ReactNode }) {
   return (
-    <section className="rounded-xl border border-line bg-paper p-5">
+    <section className="rounded-2xl border border-line bg-paper p-6">
       <h2 className="flex items-center gap-2.5 text-base font-semibold">
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
           <Icon icon={icon} className="size-[18px]" aria-hidden />
         </span>
         {title}
@@ -34,7 +34,7 @@ export default function DataInfoPage() {
       </p>
       <div className="grid items-start gap-4 lg:grid-cols-2">
 
-      <Block icon="solar:bus-bold" title="Sumber data">
+      <Block icon="solar:bus-linear" title="Sumber data">
         <p>
           Semua kendaraan, rute, trip, dan halte diambil langsung dari <strong>MBTA V3 API</strong> (api-v3.mbta.com),
           layanan angkutan umum Boston. Posisinya nyata dan berjalan saat ini, jadi jumlah dan lokasinya berubah dari menit ke menit.
@@ -47,7 +47,7 @@ export default function DataInfoPage() {
         </p>
       </Block>
 
-      <Block icon="solar:danger-triangle-bold" title="Batas permintaan">
+      <Block icon="solar:danger-triangle-linear" title="Batas permintaan">
         <p>
           Tanpa API key, MBTA hanya mengizinkan <strong>20 permintaan per menit</strong> per alamat IP. Untuk 1.000 per menit, daftarkan key gratis
           lalu isi <code className={code}>VITE_MBTA_API_KEY</code> di <code className={code}>.env.local</code>. Karena ini aplikasi frontend, key ikut
@@ -59,7 +59,7 @@ export default function DataInfoPage() {
         </p>
       </Block>
 
-      <Block icon="solar:routing-2-bold" title="Cara kerja pagination">
+      <Block icon="solar:routing-2-linear" title="Cara kerja pagination">
         <p>
           API MBTA tidak mengirim jumlah total data, hanya tautan halaman pertama, berikutnya, dan terakhir. Karena seluruh armada kurang lebih 17 KB (gzip),
           aplikasi mengambil <strong>semua kendaraan sesuai filter dalam satu permintaan</strong>, lalu memotongnya per halaman di browser (5, 10, 20, atau 50 per halaman).
@@ -71,7 +71,7 @@ export default function DataInfoPage() {
         </p>
       </Block>
 
-      <Block icon="solar:map-arrow-right-bold" title="Kenapa Trip butuh Rute">
+      <Block icon="solar:map-arrow-right-linear" title="Kenapa Trip butuh Rute">
         <p>
           Endpoint <code className={code}>/trips</code> menolak permintaan tanpa filter (kode 400, &quot;At least one filter[] is required&quot;), dan satu rute bisa punya
           sekitar 2.000 trip per hari. Karena itu pilihan Trip baru aktif setelah ada Rute. Trip yang sedang dilalui kendaraan ditaruh paling atas
@@ -79,7 +79,7 @@ export default function DataInfoPage() {
         </p>
       </Block>
 
-      <Block icon="solar:check-square-bold" title="Teknologi">
+      <Block icon="solar:check-square-linear" title="Teknologi">
         <ul className="divide-y divide-line/70">
           {STACK.map(([name, note]) => (
             <li key={name} className="flex flex-wrap justify-between gap-x-4 py-1.5 first:pt-0 last:pb-0">

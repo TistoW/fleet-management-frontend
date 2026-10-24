@@ -9,9 +9,11 @@ it('membaca parameter dan memakai nilai bawaan', () => {
     page: 3,
     size: 20,
     vehicle: 'y1',
+    status: null,
+    focus: null,
     view: 'kendaraan',
   })
-  expect(parseUrlState('')).toEqual({ routes: [], trips: [], page: 1, size: 10, vehicle: null, view: 'kendaraan' })
+  expect(parseUrlState('')).toEqual({ routes: [], trips: [], page: 1, size: 10, vehicle: null, status: null, focus: null, view: 'kendaraan' })
 })
 
 it('menolak page dan size yang tidak valid', () => {
