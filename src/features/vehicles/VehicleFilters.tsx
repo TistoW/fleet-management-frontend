@@ -193,9 +193,11 @@ export default function VehicleFilters({ routes, trips, status = null, query = '
           </BottomSheet>
         )
       ) : (
-        <div className="grid gap-3 rounded-2xl border border-line bg-paper p-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1.2fr]">
-        <SearchField value={query} onChange={(next) => onChange({ q: next })} shortcut className="col-span-full" />
+        <div className="flex flex-wrap items-start gap-2.5 rounded-2xl border border-line bg-paper p-2.5">
+        <SearchField value={query} onChange={(next) => onChange({ q: next })} shortcut className="min-w-[17.5rem] basis-full xl:basis-0 xl:flex-1" />
         <MultiSelect
+          compact
+          className="min-w-[12rem] flex-1 xl:w-60 xl:flex-none"
           label="Rute"
           placeholder="Semua rute"
           options={options}
@@ -212,6 +214,8 @@ export default function VehicleFilters({ routes, trips, status = null, query = '
           emptyText="Tidak ada rute"
         />
         <MultiSelect
+          compact
+          className="min-w-[12rem] flex-1 xl:w-60 xl:flex-none"
           label="Trip"
           placeholder="Semua trip"
           options={tripOptions}
@@ -229,9 +233,11 @@ export default function VehicleFilters({ routes, trips, status = null, query = '
           onLoadMore={() => void t.all.fetchNextPage()}
           emptyText="Belum ada trip hari ini untuk rute ini"
         />
-        <p className="self-end pb-2 text-xs text-ink-muted max-lg:sm:col-span-2" aria-live="polite">
-          {notice || (noRoute ? '' : 'Trip mempersempit hasil di dalam rute yang dipilih.')}
-        </p>
+        {notice && (
+          <p className="basis-full text-xs text-ink-muted" aria-live="polite">
+            {notice}
+          </p>
+        )}
         </div>
       )}
       <ActiveFilters chips={chips} onClear={() => onChange({ routes: [], trips: [], status: null, q: '' })} />

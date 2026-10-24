@@ -31,6 +31,9 @@ interface Props {
   emptyText?: string
   /** The page shows its own removable chips. */
   hideChips?: boolean
+  /** Toolbar mode: no visible label or hint (aria-label and title carry them); wrapper classes via `className`. */
+  compact?: boolean
+  className?: string
 }
 
 /** While searching, stop auto-loading after this many pages and offer a button. */
@@ -43,6 +46,8 @@ export default function MultiSelect({
   onChange,
   placeholder = 'Pilih',
   hideChips,
+  compact,
+  className = '',
   selectedOptions = [],
   disabled,
   disabledHint,
@@ -190,8 +195,8 @@ export default function MultiSelect({
   const summary = selected.length ? `${selected.length} dipilih` : placeholder
 
   return (
-    <div ref={root} className="relative">
-      <span className="mb-1 block text-xs font-medium text-ink-muted">{label}</span>
+    <div ref={root} className={`relative ${className}`}>
+      {!compact && <span className="mb-1 block text-xs font-medium text-ink-muted">{label}</span>}
       <button
         ref={trigger}
         type="button"
@@ -201,6 +206,7 @@ export default function MultiSelect({
         aria-controls={open ? listId : undefined}
         aria-describedby={disabled && disabledHint ? hintId : undefined}
         aria-label={`${label}: ${summary}`}
+        title={compact && disabled ? disabledHint : undefined}
         onClick={() => setOpen((o) => !o)}
         onKeyDown={(e) => {
           if (e.key === 'ArrowDown') {
@@ -214,7 +220,7 @@ export default function MultiSelect({
         <Icon icon="solar:alt-arrow-down-linear" className="size-4 text-ink-muted" aria-hidden />
       </button>
       {disabled && disabledHint && (
-        <p id={hintId} className="mt-1 text-xs text-ink-muted">
+        <p id={hintId} className={compact ? 'sr-only' : 'mt-1 text-xs text-ink-muted'}>
           {disabledHint}
         </p>
       )}
