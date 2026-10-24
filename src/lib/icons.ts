@@ -20,6 +20,12 @@ import refreshBold from '@iconify-icons/solar/refresh-bold'
 import routing2Bold from '@iconify-icons/solar/routing-2-bold'
 import stopCircleBold from '@iconify-icons/solar/stop-circle-bold'
 import stopLinear from '@iconify-icons/solar/stop-linear'
+import busLinear from '@iconify-icons/solar/bus-linear'
+import mapPointWaveLinear from '@iconify-icons/solar/map-point-wave-linear'
+import databaseLinear from '@iconify-icons/solar/database-linear'
+import closeCircleLinear from '@iconify-icons/solar/close-circle-linear'
+import hamburgerMenuLinear from '@iconify-icons/solar/hamburger-menu-linear'
+import refreshLinear from '@iconify-icons/solar/refresh-linear'
 
 // Registered up front so no icon is fetched from api.iconify.design at runtime.
 const icons = {
@@ -44,6 +50,12 @@ const icons = {
   'solar:routing-2-bold': routing2Bold,
   'solar:stop-circle-bold': stopCircleBold,
   'solar:stop-linear': stopLinear,
+  'solar:bus-linear': busLinear,
+  'solar:map-point-wave-linear': mapPointWaveLinear,
+  'solar:database-linear': databaseLinear,
+  'solar:close-circle-linear': closeCircleLinear,
+  'solar:hamburger-menu-linear': hamburgerMenuLinear,
+  'solar:refresh-linear': refreshLinear,
 }
 
 for (const [name, data] of Object.entries(icons)) addIcon(name, data)

@@ -5,9 +5,9 @@ import type { View } from '../hooks/useUrlState'
 import { formatClockWib } from '../lib/format'
 
 const NAV: { view: View; label: string; icon: string; group: string }[] = [
-  { view: 'kendaraan', label: 'Kendaraan', icon: 'solar:bus-bold', group: 'Pantau' },
-  { view: 'peta', label: 'Peta Armada', icon: 'solar:map-bold', group: 'Pantau' },
-  { view: 'data', label: 'Tentang Data', icon: 'solar:info-circle-bold', group: 'Info' },
+  { view: 'kendaraan', label: 'Kendaraan', icon: 'solar:bus-linear', group: 'Pantau' },
+  { view: 'peta', label: 'Peta Armada', icon: 'solar:map-point-wave-linear', group: 'Pantau' },
+  { view: 'data', label: 'Tentang Data', icon: 'solar:database-linear', group: 'Info' },
 ]
 
 export interface Live {
@@ -112,7 +112,7 @@ export default function AppShell({ view, hrefFor, onNavigate, live, children }: 
       >
         <div className="flex h-14 shrink-0 items-center gap-2.5 border-b border-line px-4">
           <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-accent-light to-accent">
-            <Icon icon="solar:bus-bold" className="size-4 text-white" aria-hidden />
+            <Icon icon="solar:bus-linear" className="size-4 text-white" aria-hidden />
           </span>
           <span className={`min-w-0 flex-1 truncate text-[15px] font-bold ${label}`}>Pantau Armada</span>
           <button
@@ -121,7 +121,7 @@ export default function AppShell({ view, hrefFor, onNavigate, live, children }: 
             aria-label="Tutup menu"
             className="rounded-lg p-1 text-ink-muted hover:bg-ink/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent md:hidden"
           >
-            <Icon icon="solar:close-circle-bold" className="size-6" aria-hidden />
+            <Icon icon="solar:close-circle-linear" className="size-6" aria-hidden />
           </button>
         </div>
 
@@ -184,7 +184,7 @@ export default function AppShell({ view, hrefFor, onNavigate, live, children }: 
             aria-controls="menu-utama"
             className="-ml-1 rounded-lg p-1.5 text-ink/70 hover:bg-ink/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent md:hidden"
           >
-            <Icon icon="solar:hamburger-menu-bold" className="size-5" aria-hidden />
+            <Icon icon="solar:hamburger-menu-linear" className="size-5" aria-hidden />
           </button>
           <h1 className="min-w-0 flex-1 truncate text-sm font-semibold">{title}</h1>
           {live && <Toolbar {...live} />}
@@ -214,7 +214,7 @@ function Toolbar({ updatedAt, auto, onAuto, isFetching, onRefresh }: Live) {
         disabled={isFetching}
         className="inline-flex items-center gap-2 rounded-lg border border-line bg-paper px-3 py-1.5 text-sm font-medium text-ink hover:bg-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-60"
       >
-        {isFetching ? <Spinner /> : <Icon icon="solar:refresh-bold" className="size-4" aria-hidden />}
+        {isFetching ? <Spinner /> : <Icon icon="solar:refresh-linear" className="size-4" aria-hidden />}
         Muat ulang
       </button>
     </>
