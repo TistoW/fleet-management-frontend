@@ -11,6 +11,31 @@ beforeEach(() => {
 })
 afterEach(() => vi.unstubAllGlobals())
 
+it('switches pages from the sidebar, keeps the filters and drops the popup', async () => {
+  window.history.replaceState(null, '', '/?route=Red&vehicle=y1')
+  render(<App />)
+  const nav = screen.getByRole('navigation', { name: 'Halaman' })
+  expect(within(nav).getByRole('link', { name: 'Kendaraan' })).toHaveAttribute('aria-current', 'page')
+  expect(await screen.findByText('Menampilkan 1-3 dari 3 kendaraan')).toBeInTheDocument()
+
+  // The link itself carries the filters, so it also works when opened in a new tab.
+  const peta = within(nav).getByRole('link', { name: 'Peta Armada' })
+  expect(peta).toHaveAttribute('href', '?route=Red&view=peta')
+  await userEvent.click(peta)
+  expect(window.location.search).toBe('?route=Red&view=peta')
+  expect(await screen.findByRole('heading', { name: 'Peta Armada' })).toBeInTheDocument()
+  expect(within(nav).getByRole('link', { name: 'Peta Armada' })).toHaveAttribute('aria-current', 'page')
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+
+  await userEvent.click(within(nav).getByRole('link', { name: 'Tentang Data' }))
+  expect(await screen.findByRole('heading', { name: 'Sumber data' })).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Muat ulang' })).not.toBeInTheDocument()
+
+  await userEvent.click(within(nav).getByRole('link', { name: 'Kendaraan' }))
+  expect(window.location.search).toBe('?route=Red')
+  expect(await screen.findByRole('button', { name: 'Muat ulang' })).toBeInTheDocument()
+})
+
 it('shows the update time and the refresh controls in the top bar', async () => {
   render(<App />)
   await screen.findByText('Menampilkan 1-3 dari 3 kendaraan')
@@ -44,6 +69,15 @@ it('opens the mobile drawer, traps Tab inside and closes on ESC and on the backd
   await userEvent.click(burger)
   await userEvent.click(within(menu).getByRole('button', { name: 'Tutup menu' }))
   expect(burger).toHaveAttribute('aria-expanded', 'false')
+})
+
+it('closes the drawer after choosing a page', async () => {
+  render(<App />)
+  const burger = screen.getByRole('button', { name: 'Buka menu' })
+  await userEvent.click(burger)
+  await userEvent.click(screen.getByRole('link', { name: 'Tentang Data' }))
+  expect(burger).toHaveAttribute('aria-expanded', 'false')
+  expect(window.location.search).toBe('?view=data')
 })
 
 it('collapses the sidebar to icons and remembers the choice', async () => {

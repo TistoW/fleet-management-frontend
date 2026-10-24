@@ -1,0 +1,99 @@
+import { Icon } from '@iconify/react'
+import type { ReactNode } from 'react'
+
+function Block({ icon, title, children }: { icon: string; title: string; children: ReactNode }) {
+  return (
+    <section className="rounded-xl border border-line bg-paper p-5">
+      <h2 className="flex items-center gap-2.5 text-base font-semibold">
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent">
+          <Icon icon={icon} className="size-[18px]" aria-hidden />
+        </span>
+        {title}
+      </h2>
+      <div className="mt-3 space-y-3 text-sm leading-relaxed text-ink/85">{children}</div>
+    </section>
+  )
+}
+
+const code = 'rounded bg-canvas px-1 py-0.5 font-mono text-[13px]'
+
+const STACK: [string, string][] = [
+  ['React 19 + TypeScript', 'komponen fungsi dan hooks, mode strict'],
+  ['TanStack Query', 'cache, refetch otomatis, retry'],
+  ['Tailwind CSS v4', 'token warna dan font di satu berkas'],
+  ['Leaflet + OpenStreetMap', 'peta, dimuat hanya saat dibutuhkan'],
+  ['Solar (Iconify)', 'ikon yang dibundel, tanpa panggilan ke luar'],
+  ['Vitest + Testing Library', 'tes unit dan komponen'],
+]
+
+export default function DataInfoPage() {
+  return (
+    <div className="max-w-5xl">
+      <p className="mb-4 text-sm text-ink-muted">
+        Ringkasan dari mana angka di aplikasi ini datang dan kenapa ia dibuat seperti ini.
+      </p>
+      <div className="grid items-start gap-4 lg:grid-cols-2">
+
+      <Block icon="solar:bus-bold" title="Sumber data">
+        <p>
+          Semua kendaraan, rute, trip, dan halte diambil langsung dari <strong>MBTA V3 API</strong> (api-v3.mbta.com),
+          layanan angkutan umum Boston. Posisinya nyata dan berjalan saat ini, jadi jumlah dan lokasinya berubah dari menit ke menit.
+          Tidak ada data contoh di dalam aplikasi.
+        </p>
+        <p>
+          Daftar kendaraan diperbarui otomatis tiap <strong>30 detik</strong> selama tab terlihat. Pembaruan berhenti saat tab
+          disembunyikan, dan bisa dimatikan lewat kotak &quot;Otomatis tiap 30 detik&quot; di bagian atas. Tombol &quot;Muat ulang&quot; mengambil data
+          saat itu juga. Jam yang tertera memakai WIB.
+        </p>
+      </Block>
+
+      <Block icon="solar:danger-triangle-bold" title="Batas permintaan">
+        <p>
+          Tanpa API key, MBTA hanya mengizinkan <strong>20 permintaan per menit</strong> per alamat IP. Untuk 1.000 per menit, daftarkan key gratis
+          lalu isi <code className={code}>VITE_MBTA_API_KEY</code> di <code className={code}>.env.local</code>. Karena ini aplikasi frontend, key ikut
+          masuk ke bundle dan terlihat publik.
+        </p>
+        <p>
+          Kalau batas terlampaui, aplikasi menampilkan hitung mundur sampai menit berikutnya lalu mencoba lagi sendiri. Data terakhir tetap
+          tampil selama itu.
+        </p>
+      </Block>
+
+      <Block icon="solar:routing-2-bold" title="Cara kerja pagination">
+        <p>
+          API MBTA tidak mengirim jumlah total data, hanya tautan halaman pertama, berikutnya, dan terakhir. Karena seluruh armada kurang lebih 17 KB (gzip),
+          aplikasi mengambil <strong>semua kendaraan sesuai filter dalam satu permintaan</strong>, lalu memotongnya per halaman di browser (5, 10, 20, atau 50 per halaman).
+        </p>
+        <p>
+          Hasilnya: total selalu pasti, urutan stabil karena diurutkan menurut label, pindah halaman tidak memakai jatah 20 permintaan per menit,
+          dan kendaraan tidak dobel atau terlewat ketika data bergeser di antara dua permintaan. Peta Armada memakai data yang sama, jadi
+          membukanya tidak menambah permintaan selain gambar petanya.
+        </p>
+      </Block>
+
+      <Block icon="solar:map-arrow-right-bold" title="Kenapa Trip butuh Rute">
+        <p>
+          Endpoint <code className={code}>/trips</code> menolak permintaan tanpa filter (kode 400, &quot;At least one filter[] is required&quot;), dan satu rute bisa punya
+          sekitar 2.000 trip per hari. Karena itu pilihan Trip baru aktif setelah ada Rute. Trip yang sedang dilalui kendaraan ditaruh paling atas
+          di grup &quot;Sedang berjalan&quot;, dan melepas sebuah rute ikut melepas trip miliknya.
+        </p>
+      </Block>
+
+      <Block icon="solar:check-square-bold" title="Teknologi">
+        <ul className="divide-y divide-line/70">
+          {STACK.map(([name, note]) => (
+            <li key={name} className="flex flex-wrap justify-between gap-x-4 py-1.5 first:pt-0 last:pb-0">
+              <span className="font-medium text-ink">{name}</span>
+              <span className="text-ink-muted">{note}</span>
+            </li>
+          ))}
+        </ul>
+        <p>
+          Filter, halaman, ukuran, kendaraan yang dibuka, dan halaman yang aktif disimpan di alamat (<code className={code}>?view=peta&amp;route=Red</code>),
+          jadi tautan bisa dibagikan dan tombol Back bekerja.
+        </p>
+      </Block>
+      </div>
+    </div>
+  )
+}

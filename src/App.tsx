@@ -8,8 +8,9 @@ import { useFleet } from './hooks/useFleet'
 import { buildSearch, type View } from './hooks/useUrlState'
 import AppShell from './layout/AppShell'
 
-// Leaflet stays out of the first load: the map view is its own chunk.
+// Each secondary view is its own chunk: Leaflet stays out of the first load.
 const FleetMapPage = lazy(() => import('./features/map/FleetMapPage'))
+const DataInfoPage = lazy(() => import('./features/about/DataInfoPage'))
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,7 +29,11 @@ function Dashboard() {
       view={url.view}
       hrefFor={hrefFor}
       onNavigate={(view) => setUrl({ view })}
-      live={{ updatedAt: dataUpdatedAt, auto, onAuto: setAuto, isFetching, onRefresh: () => void refetch() }}
+      live={
+        url.view === 'data'
+          ? undefined
+          : { updatedAt: dataUpdatedAt, auto, onAuto: setAuto, isFetching, onRefresh: () => void refetch() }
+      }
     >
       <Suspense
         fallback={
@@ -39,8 +44,9 @@ function Dashboard() {
       >
         {url.view === 'kendaraan' && <VehiclesPage {...pageProps} />}
         {url.view === 'peta' && <FleetMapPage {...pageProps} />}
+        {url.view === 'data' && <DataInfoPage />}
       </Suspense>
-      {url.vehicle && (
+      {url.vehicle && url.view !== 'data' && (
         <VehicleDetailModal
           id={url.vehicle}
           preview={data?.find((x) => x.id === url.vehicle)}
