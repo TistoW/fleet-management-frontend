@@ -6,6 +6,7 @@ import ErrorBoundary from '../../components/ErrorBoundary'
 import ErrorState from '../../components/ErrorState'
 import { DetailRowSkeleton } from '../../components/Skeletons'
 import StatusBadge from '../../components/StatusBadge'
+import { useStreetName } from '../../hooks/useStreetName'
 import { useVehicleDetail } from '../../hooks/useVehicleDetail'
 import { formatClockWib, formatCoord, formatRelative } from '../../lib/format'
 import Spinner from '../../components/Spinner'
@@ -58,6 +59,7 @@ export default function VehicleDetailModal({ id, preview, onClose, autoRefresh }
   const [VehicleMap, setVehicleMap] = useState(loadMap)
   const d = q.data
   const v = d ?? preview
+  const street = useStreetName(v?.lat, v?.lng)
 
   // Native <dialog>: the browser makes the page inert (focus trap) and handles ESC.
   useEffect(() => {
@@ -130,6 +132,17 @@ export default function VehicleDetailModal({ id, preview, onClose, autoRefresh }
                   <Row label="Lng">
                     <span className="font-mono tabular-nums">{formatCoord(v.lng)}</span>
                   </Row>
+                  {street.data && (
+                    <Row label="Lokasi">
+                      {street.data}
+                      <span className="block text-xs text-ink-muted">
+                        ©{' '}
+                        <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer" className="underline">
+                          OpenStreetMap
+                        </a>
+                      </span>
+                    </Row>
+                  )}
                   <Row label="Diperbarui">
                     {formatClockWib(v.updatedAt)} WIB · {formatRelative(v.updatedAt)}
                   </Row>
