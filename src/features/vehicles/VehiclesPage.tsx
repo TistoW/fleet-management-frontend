@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react'
 import type { RouteView } from '../../api/routes'
+import { useIsMobile } from '../../hooks/useIsMobile'
 import PageSizeSelect from '../../components/PageSizeSelect'
 import Pagination from '../../components/Pagination'
 import StaleBanner from '../../components/StaleBanner'
@@ -15,14 +16,18 @@ interface Props {
   url: UrlState
   setUrl: SetUrl
   fleet: FleetQuery
+  sheetOpen?: boolean
+  onSheetClose?: () => void
+  onOpenFilters?: () => void
 }
 
-export default function VehiclesPage({ url, setUrl, fleet }: Props) {
+export default function VehiclesPage({ url, setUrl, fleet, sheetOpen, onSheetClose }: Props) {
   const { data, isPending, isFetching, isError, error, refetch, dataUpdatedAt, countdown } = fleet
   const hasFilters = url.routes.length > 0 || url.trips.length > 0 || !!url.status
   const stats = useMemo(() => fleetStats(data ?? []), [data])
   const shown = useMemo(() => applyStatus(data ?? [], url.status), [data, url.status])
   const result = paginate(shown, url.page, url.size)
+  const mobile = useIsMobile()
   const scroller = useRef<HTMLDivElement>(null)
 
   // Filters or the live fleet shrank: bring the URL back to a page that exists.
@@ -46,10 +51,10 @@ export default function VehiclesPage({ url, setUrl, fleet }: Props) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <p className="text-sm text-ink-muted">Pantau posisi dan status bus yang sedang beroperasi. Klik kartu angka untuk menyaring.</p>
+      <p className="text-sm text-ink-muted max-md:hidden">Pantau posisi dan status bus yang sedang beroperasi. Klik kartu angka untuk menyaring.</p>
       {isError && data && <StaleBanner updatedAt={dataUpdatedAt} countdown={countdown} onRetry={() => void refetch()} />}
 
-      <ul aria-label="Ringkasan armada" className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 md:mx-0 md:px-0 [&>li]:flex [&>li]:flex-1 [&>li]:snap-start">
+      <ul aria-label="Ringkasan armada" className="-mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:px-0 md:pb-0 no-scrollbar [&>li]:flex [&>li]:flex-1 [&>li]:snap-start max-md:[&>li]:flex-none">
         {data ? (
           <>
             <li>
@@ -74,9 +79,9 @@ export default function VehiclesPage({ url, setUrl, fleet }: Props) {
         )}
       </ul>
 
-      <VehicleFilters routes={url.routes} trips={url.trips} status={url.status} onChange={setUrl} knownRoutes={knownRoutes} />
+      <VehicleFilters routes={url.routes} trips={url.trips} status={url.status} sheetOpen={sheetOpen} onSheetClose={onSheetClose} onChange={setUrl} knownRoutes={knownRoutes} />
 
-      <section aria-label="Daftar kendaraan" className="flex min-h-[22rem] flex-1 flex-col overflow-hidden rounded-2xl border border-line bg-paper">
+      <section aria-label="Daftar kendaraan" className="flex min-h-[22rem] flex-1 flex-col overflow-hidden rounded-2xl border border-line bg-paper max-md:-mx-4 max-md:min-h-0 max-md:rounded-none max-md:border-x-0">
         <div ref={scroller} className={`flex min-h-0 flex-1 flex-col overflow-y-auto ${isFetching && data ? 'opacity-70 transition-opacity' : ''}`}>
           <VehicleGrid
             vehicles={data && result.pageItems}
@@ -91,10 +96,10 @@ export default function VehiclesPage({ url, setUrl, fleet }: Props) {
           />
         </div>
         {data && (
-          <footer className="flex shrink-0 flex-wrap items-center justify-between gap-x-6 gap-y-2 border-t border-line bg-paper px-4 py-2.5">
-            <div className="flex items-center gap-4">
-              <p className="text-sm text-ink-muted tabular-nums" aria-live="polite">
-                {rangeText(result.from, result.to, result.total)}
+          <footer className="flex shrink-0 items-center justify-between gap-x-6 gap-y-2 border-t border-line bg-paper px-4 py-2.5 max-md:py-1.5 md:flex-wrap">
+            <div className="flex items-center gap-4 max-md:gap-2">
+              <p className="whitespace-nowrap text-sm text-ink-muted tabular-nums max-md:text-xs" aria-live="polite">
+                {mobile ? (result.total ? `${result.from}-${result.to} dari ${result.total}` : 'Tidak ada data') : rangeText(result.from, result.to, result.total)}
               </p>
               {showBars && <PageSizeSelect size={url.size} onChange={(size) => setUrl({ size, page: pageAfterSizeChange(result.from, size) })} />}
             </div>

@@ -1,4 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
+import BottomSheet from '../../components/BottomSheet'
+import { primaryBtn } from '../../components/EmptyState'
+import { useIsMobile } from '../../hooks/useIsMobile'
 import ActiveFilters, { type Chip } from '../../components/ActiveFilters'
 import { STATUS_FILTER_LABEL } from '../../lib/fleetStats'
 import { describeError } from '../../api/errors'
@@ -15,6 +18,9 @@ interface Props {
   routes: string[]
   trips: string[]
   status?: StatusFilter | null
+  /** Phones: the filters live in a bottom sheet opened from the app bar. */
+  sheetOpen?: boolean
+  onSheetClose?: () => void
   onChange: (patch: Partial<Pick<UrlState, 'routes' | 'trips' | 'status'>>, opts?: { replace?: boolean }) => void
   /** Routes seen on vehicles, used to name chips from the URL before /routes has loaded them. */
   knownRoutes?: RouteView[]
@@ -30,7 +36,7 @@ const toOption = (r: RouteView): Option => ({
 const RUNNING = 'Sedang berjalan'
 const ALL = 'Semua trip hari ini'
 
-export default function VehicleFilters({ routes, trips, status = null, onChange, knownRoutes = [] }: Props) {
+export default function VehicleFilters({ routes, trips, status = null, sheetOpen = false, onSheetClose = () => {}, onChange, knownRoutes = [] }: Props) {
   const q = useRouteOptions()
   const options = useMemo(() => q.routes.map(toOption), [q.routes])
   const known = useMemo(() => knownRoutes.map(toOption), [knownRoutes])
@@ -107,6 +113,7 @@ export default function VehicleFilters({ routes, trips, status = null, onChange,
   }, [notice])
 
   const noRoute = routes.length === 0
+  const mobile = useIsMobile()
 
   const chips: Chip[] = [
     ...routes.map((id) => {
@@ -121,7 +128,27 @@ export default function VehicleFilters({ routes, trips, status = null, onChange,
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="grid gap-3 rounded-2xl border border-line bg-paper p-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1.2fr]">
+      {mobile ? (
+        sheetOpen && (
+          <BottomSheet
+            title="Filter"
+            onClose={onSheetClose}
+            footer={
+              <>
+                <button
+                  type="button"
+                  onClick={() => onChange({ routes: [], trips: [], status: null })}
+                  className="h-12 flex-1 rounded-xl border border-line text-sm font-medium active:bg-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                >
+                  Reset
+                </button>
+                <button type="button" onClick={onSheetClose} className={`${primaryBtn} h-12 flex-1`}>
+                  Terapkan
+                </button>
+              </>
+            }
+          >
+            <div className="grid min-h-[22rem] content-start gap-4">
         <MultiSelect
           label="Rute"
           placeholder="Semua rute"
@@ -159,7 +186,50 @@ export default function VehicleFilters({ routes, trips, status = null, onChange,
         <p className="self-end pb-2 text-xs text-ink-muted max-lg:sm:col-span-2" aria-live="polite">
           {notice || (noRoute ? '' : 'Trip mempersempit hasil di dalam rute yang dipilih.')}
         </p>
-      </div>
+            </div>
+          </BottomSheet>
+        )
+      ) : (
+        <div className="grid gap-3 rounded-2xl border border-line bg-paper p-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1.2fr]">
+        <MultiSelect
+          label="Rute"
+          placeholder="Semua rute"
+          options={options}
+          selected={routes}
+          selectedOptions={known}
+          onChange={changeRoutes}
+          hideChips
+          isLoading={q.isPending}
+          error={q.isError && options.length === 0 ? describeError(q.error).title : undefined}
+          onRetry={() => void q.refetch()}
+          hasMore={q.hasNextPage}
+          isLoadingMore={q.isFetchingNextPage}
+          onLoadMore={() => void q.fetchNextPage()}
+          emptyText="Tidak ada rute"
+        />
+        <MultiSelect
+          label="Trip"
+          placeholder="Semua trip"
+          options={tripOptions}
+          selected={trips}
+          selectedOptions={tripChips}
+          onChange={(next) => onChange({ trips: next })}
+          hideChips
+          disabled={noRoute}
+          disabledHint="Pilih rute dulu untuk melihat trip"
+          isLoading={!noRoute && t.all.isPending && tripOptions.length === 0}
+          error={t.all.isError && tripOptions.length === 0 ? describeError(t.all.error).title : undefined}
+          onRetry={() => void t.all.refetch()}
+          hasMore={t.all.hasNextPage}
+          isLoadingMore={t.all.isFetchingNextPage}
+          onLoadMore={() => void t.all.fetchNextPage()}
+          emptyText="Belum ada trip hari ini untuk rute ini"
+        />
+        <p className="self-end pb-2 text-xs text-ink-muted max-lg:sm:col-span-2" aria-live="polite">
+          {notice || (noRoute ? '' : 'Trip mempersempit hasil di dalam rute yang dipilih.')}
+        </p>
+        </div>
+      )}
       <ActiveFilters chips={chips} onClear={() => onChange({ routes: [], trips: [], status: null })} />
     </div>
   )

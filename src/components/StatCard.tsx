@@ -23,7 +23,7 @@ export default function StatCard({ icon, tint, label, value, active, onClick }: 
       </span>
     </>
   )
-  const base = 'flex min-w-[10.5rem] flex-1 items-center gap-3 rounded-2xl border bg-paper p-3.5 transition-colors'
+  const base = 'flex min-w-[10.5rem] flex-1 items-center gap-3 rounded-2xl border bg-paper p-3.5 max-md:min-w-[9rem] max-md:p-3 transition-colors'
   if (!onClick) return <div className={`${base} border-line`}>{body}</div>
   return (
     <button

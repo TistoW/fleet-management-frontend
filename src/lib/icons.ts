@@ -32,6 +32,9 @@ import mapArrowRightLinear from '@iconify-icons/solar/map-arrow-right-linear'
 import checkSquareLinear from '@iconify-icons/solar/check-square-linear'
 import stopCircleLinear from '@iconify-icons/solar/stop-circle-linear'
 import questionCircleLinear from '@iconify-icons/solar/question-circle-linear'
+import filterLinear from '@iconify-icons/solar/filter-linear'
+import menuDotsBold from '@iconify-icons/solar/menu-dots-bold'
+import arrowLeftLinear from '@iconify-icons/solar/arrow-left-linear'
 
 // Registered up front so no icon is fetched from api.iconify.design at runtime.
 const icons = {
@@ -68,6 +71,9 @@ const icons = {
   'solar:check-square-linear': checkSquareLinear,
   'solar:stop-circle-linear': stopCircleLinear,
   'solar:question-circle-linear': questionCircleLinear,
+  'solar:filter-linear': filterLinear,
+  'solar:menu-dots-bold': menuDotsBold,
+  'solar:arrow-left-linear': arrowLeftLinear,
 }
 
 for (const [name, data] of Object.entries(icons)) addIcon(name, data)

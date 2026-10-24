@@ -86,10 +86,10 @@ export default function VehicleDetailModal({ id, preview, onClose, autoRefresh }
         onClose()
       }}
       onClick={(e) => e.target === ref.current && onClose()}
-      className="m-auto h-dvh max-h-dvh w-full max-w-none flex-col overflow-hidden bg-paper p-0 text-ink backdrop:bg-ink/40 open:flex sm:h-auto sm:max-h-[90dvh] sm:max-w-3xl sm:rounded-2xl sm:shadow-xl"
+      className="m-auto h-dvh max-h-dvh w-full max-w-none flex-col overflow-hidden bg-paper p-0 text-ink backdrop:bg-ink/40 open:flex max-sm:animate-[sheet-up_.25s_ease-out] sm:h-auto sm:max-h-[90dvh] sm:max-w-3xl sm:rounded-2xl sm:shadow-xl"
     >
-      <div className="flex shrink-0 items-start justify-between gap-4 border-b border-line px-6 py-5">
-        <div>
+      <div className="flex shrink-0 items-start justify-between gap-4 border-b border-line px-4 py-3 sm:px-6 sm:py-5">
+        <div className="min-w-0 flex-1">
           <h2 id={titleId} className="font-mono text-xl font-semibold tabular-nums">
             {v ? `Kendaraan ${v.label}` : 'Memuat kendaraan'}
           </h2>
@@ -105,9 +105,10 @@ export default function VehicleDetailModal({ id, preview, onClose, autoRefresh }
           autoFocus
           onClick={onClose}
           aria-label="Tutup"
-          className="rounded-xl p-1.5 text-ink-muted hover:bg-ink/5 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          className="flex size-12 shrink-0 items-center justify-center rounded-full p-1.5 max-sm:order-first sm:size-auto sm:rounded-xl text-ink-muted hover:bg-ink/5 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
         >
-          <Icon icon="solar:close-circle-linear" className="size-8" aria-hidden />
+          <Icon icon="solar:arrow-left-linear" className="size-6 sm:hidden" aria-hidden />
+          <Icon icon="solar:close-circle-linear" className="hidden size-8 sm:block" aria-hidden />
         </button>
       </div>
 
@@ -117,7 +118,7 @@ export default function VehicleDetailModal({ id, preview, onClose, autoRefresh }
           <ErrorState error={q.error} onRetry={retry} />
         </div>
       ) : (
-        <div className="grid gap-6 p-6 sm:grid-cols-2">
+        <div className="grid gap-4 p-4 sm:grid-cols-2 sm:gap-6 sm:p-6">
           <div className="flex flex-col gap-3">
             {v ? (
               <>
@@ -204,7 +205,7 @@ export default function VehicleDetailModal({ id, preview, onClose, autoRefresh }
               </>
             )}
           </div>
-          <div className="min-h-64 overflow-hidden rounded-xl">
+          <div className="h-56 min-h-56 overflow-hidden max-sm:order-first max-sm:-mx-4 max-sm:-mt-4 sm:h-auto sm:min-h-64 sm:rounded-xl">
             {v && v.lat != null && v.lng != null ? (
               <ErrorBoundary
                 fallback={(reset) => (

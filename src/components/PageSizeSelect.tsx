@@ -4,12 +4,12 @@ import { PAGE_SIZES } from '../hooks/useUrlState'
 export default function PageSizeSelect({ size, onChange }: { size: number; onChange: (size: number) => void }) {
   return (
     <label className="flex items-center gap-2 text-sm text-ink-muted">
-      Per halaman
+      <span className="max-md:sr-only">Per halaman</span>
       <span className="relative">
         <select
           value={size}
           onChange={(e) => onChange(Number(e.target.value))}
-          className="h-10 appearance-none rounded-xl border border-line bg-paper pl-3 pr-9 text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          className="h-10 appearance-none rounded-xl border border-line bg-paper pl-3 pr-9 max-md:h-11 max-md:pr-8 text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
         >
           {PAGE_SIZES.map((n) => (
             <option key={n} value={n}>

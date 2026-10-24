@@ -64,7 +64,7 @@ export default function FleetMap({ vehicles, fitKey, focusId, onOpen }: Props) {
   const points = useMemo(() => placed.map((v): [number, number] => [v.lat!, v.lng!]), [placed])
 
   return (
-    <div className="absolute inset-0 overflow-hidden rounded-2xl border border-line">
+    <div className="absolute inset-0 overflow-hidden rounded-2xl border border-line max-md:rounded-none max-md:border-0">
       <MapContainer center={BOSTON} zoom={11} className="size-full">
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'

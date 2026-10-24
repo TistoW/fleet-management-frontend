@@ -1,13 +1,14 @@
 import { Icon } from '@iconify/react'
 import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react'
+import BottomSheet from '../components/BottomSheet'
 import Spinner from '../components/Spinner'
 import type { View } from '../hooks/useUrlState'
 import { formatClockWib } from '../lib/format'
 
-const NAV: { view: View; label: string; icon: string; group: string }[] = [
-  { view: 'kendaraan', label: 'Kendaraan', icon: 'solar:bus-linear', group: 'Pantau' },
-  { view: 'peta', label: 'Peta Armada', icon: 'solar:map-point-wave-linear', group: 'Pantau' },
-  { view: 'data', label: 'Tentang Data', icon: 'solar:database-linear', group: 'Info' },
+const NAV: { view: View; label: string; short: string; icon: string; group: string }[] = [
+  { view: 'kendaraan', label: 'Kendaraan', short: 'Kendaraan', icon: 'solar:bus-linear', group: 'Pantau' },
+  { view: 'peta', label: 'Peta Armada', short: 'Peta', icon: 'solar:map-point-wave-linear', group: 'Pantau' },
+  { view: 'data', label: 'Tentang Data', short: 'Info', icon: 'solar:database-linear', group: 'Info' },
 ]
 
 export interface Live {
@@ -25,6 +26,8 @@ interface Props {
   onNavigate: (view: View) => void
   /** Status and refresh controls; left out on pages that show no live data. */
   live?: Live
+  /** Phones: the app bar gets a filter button with a badge of active filters. */
+  filter?: { count: number; onOpen: () => void }
   children: ReactNode
 }
 
@@ -37,13 +40,9 @@ const read = () => {
   }
 }
 
-const FOCUSABLE = 'a[href], button:not([disabled])'
-
-export default function AppShell({ view, hrefFor, onNavigate, live, children }: Props) {
+export default function AppShell({ view, hrefFor, onNavigate, live, filter, children }: Props) {
   const [collapsed, setCollapsed] = useState(read)
-  const [drawer, setDrawer] = useState(false)
-  const aside = useRef<HTMLElement>(null)
-  const burger = useRef<HTMLButtonElement>(null)
+  const [options, setOptions] = useState(false)
   const title = NAV.find((n) => n.view === view)?.label ?? ''
 
   const toggleCollapsed = () => {
@@ -56,40 +55,9 @@ export default function AppShell({ view, hrefFor, onNavigate, live, children }: 
     }
   }
 
-  // Off-canvas drawer (phones): focus moves in, Tab stays inside, ESC or a wider screen closes it.
-  useEffect(() => {
-    if (!drawer) return
-    const el = aside.current
-    const opener = burger.current
-    el?.querySelector<HTMLElement>(FOCUSABLE)?.focus()
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') return setDrawer(false)
-      if (e.key !== 'Tab' || !el) return
-      const items = [...el.querySelectorAll<HTMLElement>(FOCUSABLE)]
-      const first = items[0]
-      const last = items[items.length - 1]
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault()
-        last.focus()
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault()
-        first.focus()
-      }
-    }
-    const onResize = () => window.innerWidth >= 768 && setDrawer(false)
-    document.addEventListener('keydown', onKey)
-    window.addEventListener('resize', onResize)
-    return () => {
-      document.removeEventListener('keydown', onKey)
-      window.removeEventListener('resize', onResize)
-      opener?.focus()
-    }
-  }, [drawer])
-
   const go = (v: View) => (e: MouseEvent) => {
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return
     e.preventDefault()
-    setDrawer(false)
     onNavigate(v)
   }
 
@@ -100,20 +68,16 @@ export default function AppShell({ view, hrefFor, onNavigate, live, children }: 
     <div className="flex h-dvh overflow-hidden bg-canvas">
       <a
         href="#konten"
-        className="fixed left-3 top-3 z-50 -translate-y-20 rounded-xl bg-accent px-4 py-2 text-sm font-medium text-white focus:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+        className="fixed left-3 top-3 z-[60] -translate-y-20 rounded-xl bg-accent px-4 py-2 text-sm font-medium text-white focus:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
       >
         Lewati ke konten
       </a>
-      {drawer && <div className="fixed inset-0 z-30 bg-ink/40 md:hidden" onClick={() => setDrawer(false)} aria-hidden />}
       <aside
-        ref={aside}
         id="menu-utama"
         aria-label="Menu utama"
         className={[
-          'fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-line bg-paper shadow-2xl transition-[transform,visibility] duration-200',
-          'md:static md:z-auto md:translate-x-0 md:shadow-none md:transition-[width]',
+          'hidden flex-col border-r border-line bg-paper md:flex md:transition-[width]',
           collapsed ? 'md:w-[68px]' : 'md:w-64',
-          drawer ? 'translate-x-0' : 'invisible -translate-x-full md:visible',
         ].join(' ')}
       >
         <div className="flex h-14 shrink-0 items-center gap-2.5 border-b border-line px-4">
@@ -121,14 +85,6 @@ export default function AppShell({ view, hrefFor, onNavigate, live, children }: 
             <Icon icon="solar:bus-linear" className="size-4 text-white" aria-hidden />
           </span>
           <span className={`min-w-0 flex-1 truncate text-[15px] font-bold ${label}`}>Pantau Armada</span>
-          <button
-            type="button"
-            onClick={() => setDrawer(false)}
-            aria-label="Tutup menu"
-            className="rounded-lg p-1 text-ink-muted hover:bg-ink/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent md:hidden"
-          >
-            <Icon icon="solar:close-circle-linear" className="size-6" aria-hidden />
-          </button>
         </div>
 
         <nav aria-label="Halaman" className="flex-1 overflow-y-auto px-2 py-3 text-sm">
@@ -160,7 +116,7 @@ export default function AppShell({ view, hrefFor, onNavigate, live, children }: 
           ))}
         </nav>
 
-        <div className="hidden shrink-0 border-t border-line p-2 md:block">
+        <div className="shrink-0 border-t border-line p-2">
           <button
             type="button"
             onClick={toggleCollapsed}
@@ -179,21 +135,17 @@ export default function AppShell({ view, hrefFor, onNavigate, live, children }: 
         </div>
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col" inert={drawer}>
-        <header className="relative flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 border-b border-line bg-paper px-4 py-2 sm:px-6 md:min-h-14">
-          <button
-            ref={burger}
-            type="button"
-            onClick={() => setDrawer(true)}
-            aria-label="Buka menu"
-            aria-expanded={drawer}
-            aria-controls="menu-utama"
-            className="-ml-1 rounded-lg p-1.5 text-ink/70 hover:bg-ink/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent md:hidden"
-          >
-            <Icon icon="solar:hamburger-menu-linear" className="size-5" aria-hidden />
-          </button>
-          <h1 className="min-w-0 flex-1 truncate text-sm font-semibold">{title}</h1>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="relative flex h-14 shrink-0 items-center gap-x-4 border-b border-line bg-paper px-4 md:h-auto md:min-h-14 md:flex-wrap md:gap-y-1 md:px-6 md:py-2">
+          <h1 className="min-w-0 flex-1 truncate text-lg font-semibold md:text-sm">{title}</h1>
           {live && <Toolbar {...live} />}
+          {(live || filter) && (
+            <div className="-mr-2 flex items-center md:hidden">
+              {live && <IconButton label="Segarkan data" icon="solar:refresh-linear" spin={live.isFetching} onClick={live.onRefresh} />}
+              {filter && <IconButton label="Filter" icon="solar:filter-linear" badge={filter.count} onClick={filter.onOpen} />}
+              {live && <IconButton label="Opsi pembaruan" icon="solar:menu-dots-bold" onClick={() => setOptions(true)} />}
+            </div>
+          )}
           {live?.isFetching && live.updatedAt > 0 && (
             <div className="absolute inset-x-0 bottom-0 h-0.5 overflow-hidden bg-accent-soft" aria-hidden>
               <div className="bar-slide h-full w-1/3 bg-accent" />
@@ -201,10 +153,78 @@ export default function AppShell({ view, hrefFor, onNavigate, live, children }: 
           )}
         </header>
         <main id="konten" tabIndex={-1} className="min-h-0 flex-1 overflow-y-auto outline-none">
-          <div className={`mx-auto flex max-w-7xl flex-col px-4 py-5 sm:px-6 ${view === 'data' ? 'min-h-full' : 'h-full'}`}>{children}</div>
+          <div
+            className={`mx-auto flex max-w-7xl flex-col px-4 py-5 sm:px-6 ${view === 'data' ? 'min-h-full' : 'h-full'} ${
+              view === 'peta' ? 'max-md:p-0' : 'max-md:pb-0 max-md:pt-3'
+            }`}
+          >
+            {children}
+          </div>
         </main>
+        <nav
+          aria-label="Menu bawah"
+          className="flex shrink-0 border-t border-line bg-paper pb-[env(safe-area-inset-bottom)] shadow-[0_-2px_8px_rgba(0,0,0,.05)] md:hidden"
+        >
+          {NAV.map((n) => {
+            const active = n.view === view
+            return (
+              <a
+                key={n.view}
+                href={hrefFor(n.view)}
+                onClick={go(n.view)}
+                aria-current={active ? 'page' : undefined}
+                className="flex min-h-16 flex-1 flex-col items-center justify-center gap-1 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent"
+              >
+                <span
+                  className={`flex h-8 w-16 items-center justify-center rounded-full transition-colors ${
+                    active ? 'bg-accent/15 text-accent' : 'text-ink-muted'
+                  }`}
+                >
+                  <Icon icon={n.icon} className="size-6" aria-hidden />
+                </span>
+                <span className={active ? 'text-accent' : 'text-ink-muted'}>{n.short}</span>
+              </a>
+            )
+          })}
+        </nav>
       </div>
+      {options && live && <OptionsSheet {...live} onClose={() => setOptions(false)} />}
     </div>
+  )
+}
+
+function IconButton({ label, icon, onClick, badge, spin }: { label: string; icon: string; onClick: () => void; badge?: number; spin?: boolean }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={badge ? `${label}, ${badge} aktif` : label}
+      className="relative flex size-12 items-center justify-center rounded-full text-ink/80 active:bg-ink/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+    >
+      <Icon icon={icon} className={`size-6 ${spin ? 'motion-safe:animate-spin' : ''}`} aria-hidden />
+      {!!badge && (
+        <span
+          className="absolute right-1.5 top-1.5 flex size-[18px] items-center justify-center rounded-full bg-accent text-[11px] font-semibold leading-none text-white"
+          aria-hidden
+        >
+          {badge}
+        </span>
+      )}
+    </button>
+  )
+}
+
+function OptionsSheet({ updatedAt, auto, onAuto, onClose }: Live & { onClose: () => void }) {
+  return (
+    <BottomSheet title="Pembaruan data" onClose={onClose}>
+      <p className="mb-2 text-sm text-ink-muted tabular-nums">
+        {updatedAt > 0 ? `Diperbarui ${formatClockWib(new Date(updatedAt).toISOString())} WIB` : 'Belum ada data'}
+      </p>
+      <label className="flex min-h-12 items-center justify-between gap-3 text-sm">
+        Otomatis tiap 30 detik
+        <input type="checkbox" checked={auto} onChange={(e) => onAuto(e.target.checked)} className="size-6 accent-accent" />
+      </label>
+    </BottomSheet>
   )
 }
 
@@ -225,9 +245,8 @@ function Toolbar({ updatedAt, auto, onAuto, isFetching, onRefresh }: Live) {
   }, [isFetching, clicked])
 
   return (
-    <>
-      {/* On phones the status line drops to its own row under the title and the button. */}
-      <div className="flex items-center gap-x-4 text-sm text-ink-muted max-sm:order-last max-sm:w-full max-sm:justify-between">
+    <div className="hidden items-center gap-x-4 md:flex">
+      <div className="flex items-center gap-x-4 text-sm text-ink-muted">
         {updatedAt > 0 && <span className="tabular-nums">Diperbarui {formatClockWib(new Date(updatedAt).toISOString())} WIB</span>}
         <label className="flex items-center gap-2">
           <input type="checkbox" checked={auto} onChange={(e) => onAuto(e.target.checked)} className="size-4 accent-accent" />
@@ -248,9 +267,9 @@ function Toolbar({ updatedAt, auto, onAuto, isFetching, onRefresh }: Live) {
         {isFetching ? <Spinner /> : <Icon icon="solar:refresh-linear" className="size-4" aria-hidden />}
         Muat ulang
       </button>
-      <span role="status" aria-live="polite" className="text-sm text-moving max-sm:hidden">
+      <span role="status" aria-live="polite" className="text-sm text-moving">
         {done ? 'Data sudah diperbarui' : ''}
       </span>
-    </>
+    </div>
   )
 }

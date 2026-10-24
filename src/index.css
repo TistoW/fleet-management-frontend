@@ -35,3 +35,17 @@ body {
 }
 .bar-slide { animation: bar-slide 1.1s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .bar-slide { animation: none; transform: none; width: 100%; opacity: .5; } }
+
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) { [class*="animate-[sheet-up"] { animation: none; } }
+
+html { -webkit-tap-highlight-color: transparent; }
+
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* Phones zoom by pinching; the +/- buttons would sit under the floating Filter chip. */
+@media (max-width: 767px) { .leaflet-control-zoom { display: none; } }

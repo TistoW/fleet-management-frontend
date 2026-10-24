@@ -21,9 +21,12 @@ interface Props {
   url: UrlState
   setUrl: SetUrl
   fleet: FleetQuery
+  sheetOpen?: boolean
+  onSheetClose?: () => void
+  onOpenFilters?: () => void
 }
 
-export default function FleetMapPage({ url, setUrl, fleet }: Props) {
+export default function FleetMapPage({ url, setUrl, fleet, sheetOpen, onSheetClose, onOpenFilters }: Props) {
   const { data, isPending, isError, error, refetch, dataUpdatedAt, countdown, isPlaceholderData } = fleet
   const [FleetMap, setFleetMap] = useState(loadMap)
 
@@ -46,7 +49,7 @@ export default function FleetMapPage({ url, setUrl, fleet }: Props) {
   const hasFilters = url.routes.length > 0 || url.trips.length > 0 || !!url.status
   const fitKey = isPlaceholderData ? null : `${url.routes.join(',')}|${url.trips.join(',')}`
 
-  const box = 'flex min-h-[26rem] flex-1 items-center justify-center rounded-2xl border border-line bg-paper'
+  const box = 'flex min-h-[26rem] flex-1 items-center justify-center rounded-2xl border border-line bg-paper max-md:rounded-none max-md:border-0'
   let body
   if (isPending) {
     body = (
@@ -72,7 +75,7 @@ export default function FleetMapPage({ url, setUrl, fleet }: Props) {
     )
   } else {
     body = (
-      <div className="relative flex min-h-[26rem] flex-1 flex-col overflow-hidden rounded-2xl">
+      <div className="relative flex min-h-[26rem] flex-1 flex-col overflow-hidden rounded-2xl max-md:min-h-0 max-md:rounded-none">
         <ErrorBoundary
           fallback={(reset) => (
             <div role="alert" className={`${box} flex-col gap-3 text-sm text-ink-muted`}>
@@ -100,6 +103,14 @@ export default function FleetMapPage({ url, setUrl, fleet }: Props) {
             <FleetMap vehicles={placed} fitKey={fitKey} focusId={url.focus} onOpen={(id) => setUrl({ vehicle: id })} />
           </Suspense>
         </ErrorBoundary>
+        <button
+          type="button"
+          onClick={onOpenFilters}
+          className="absolute left-3 top-3 z-[500] inline-flex h-12 items-center gap-2 rounded-full bg-paper px-4 text-sm font-medium shadow-md active:bg-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent md:hidden"
+        >
+          <Icon icon="solar:filter-linear" className="size-5" aria-hidden />
+          Filter{hasFilters ? ` · ${url.routes.length + url.trips.length + (url.status ? 1 : 0)}` : ''}
+        </button>
         <div className="pointer-events-none absolute bottom-8 left-3 z-[500]">
           <div className="pointer-events-auto max-h-48 w-auto sm:w-56 overflow-y-auto rounded-xl border border-line bg-paper/95 p-3 text-sm shadow-sm">
             <p className="flex items-center gap-2 font-semibold tabular-nums">
@@ -135,10 +146,12 @@ export default function FleetMapPage({ url, setUrl, fleet }: Props) {
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-4">
-      <p className="text-sm text-ink-muted">Lihat sebaran bus di peta. Ketuk penanda untuk membuka detail kendaraan.</p>
+    <div className="flex min-h-0 flex-1 flex-col gap-4 max-md:gap-0">
+      <p className="text-sm text-ink-muted max-md:hidden">Lihat sebaran bus di peta. Ketuk penanda untuk membuka detail kendaraan.</p>
       {isError && data && <StaleBanner updatedAt={dataUpdatedAt} countdown={countdown} onRetry={() => void refetch()} />}
-      <VehicleFilters routes={url.routes} trips={url.trips} status={url.status} onChange={setUrl} knownRoutes={knownRoutes} />
+      <div className="max-md:px-4 max-md:has-[ul]:py-2">
+        <VehicleFilters routes={url.routes} trips={url.trips} status={url.status} sheetOpen={sheetOpen} onSheetClose={onSheetClose} onChange={setUrl} knownRoutes={knownRoutes} />
+      </div>
       {body}
     </div>
   )

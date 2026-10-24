@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { shouldRetry } from './api/errors'
 import Spinner from './components/Spinner'
 import VehicleDetailModal from './features/vehicles/VehicleDetailModal'
@@ -22,13 +22,19 @@ function Dashboard() {
   const { url, setUrl, auto, setAuto, fleet } = useFleet()
   const { data, isFetching, refetch, dataUpdatedAt } = fleet
   const hrefFor = (view: View) => buildSearch({ ...url, view, vehicle: null }) || window.location.pathname
-  const pageProps = { url, setUrl, fleet }
+  const [sheet, setSheet] = useState(false)
+  const pageProps = { url, setUrl, fleet, sheetOpen: sheet, onSheetClose: () => setSheet(false), onOpenFilters: () => setSheet(true) }
+  const filterCount = url.routes.length + url.trips.length + (url.status ? 1 : 0)
 
   return (
     <AppShell
       view={url.view}
       hrefFor={hrefFor}
-      onNavigate={(view) => setUrl({ view })}
+      onNavigate={(view) => {
+        setSheet(false)
+        setUrl({ view })
+      }}
+      filter={url.view === 'data' ? undefined : { count: filterCount, onOpen: () => setSheet(true) }}
       live={
         url.view === 'data'
           ? undefined

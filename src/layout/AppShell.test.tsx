@@ -44,40 +44,64 @@ it('shows the update time and the refresh controls in the top bar', async () => 
   expect(screen.getByRole('button', { name: 'Muat ulang' })).toBeInTheDocument()
 })
 
-it('opens the mobile drawer, traps Tab inside and closes on ESC and on the backdrop', async () => {
+const phone = () =>
+  vi.stubGlobal('matchMedia', (q: string) => ({ matches: true, media: q, addEventListener: () => {}, removeEventListener: () => {} }))
+
+it('switches pages from the bottom navigation and marks the active tab', async () => {
   render(<App />)
-  const burger = screen.getByRole('button', { name: 'Buka menu' })
-  const menu = screen.getByRole('complementary', { name: 'Menu utama' })
-  expect(burger).toHaveAttribute('aria-expanded', 'false')
+  const tabs = screen.getByRole('navigation', { name: 'Menu bawah' })
+  expect(within(tabs).getByRole('link', { name: 'Kendaraan' })).toHaveAttribute('aria-current', 'page')
+  await userEvent.click(within(tabs).getByRole('link', { name: 'Peta' }))
+  expect(window.location.search).toBe('?view=peta')
+  expect(within(tabs).getByRole('link', { name: 'Peta' })).toHaveAttribute('aria-current', 'page')
+  await userEvent.click(within(tabs).getByRole('link', { name: 'Info' }))
+  expect(window.location.search).toBe('?view=data')
+  expect(await screen.findByRole('heading', { name: 'Sumber data' })).toBeInTheDocument()
+})
 
-  await userEvent.click(burger)
-  expect(burger).toHaveAttribute('aria-expanded', 'true')
-  expect(menu).toContainElement(document.activeElement as HTMLElement)
+it('opens the filter sheet from the app bar, keeps focus inside and closes on ESC and on Terapkan', async () => {
+  phone()
+  render(<App />)
+  await screen.findByText('1-3 dari 3')
+  const open = screen.getByRole('button', { name: 'Filter' })
+  await userEvent.click(open)
+  const sheet = screen.getByRole('dialog', { name: 'Filter' })
+  expect(sheet).toContainElement(document.activeElement as HTMLElement)
+  expect(within(sheet).getByRole('button', { name: /^Rute/ })).toBeInTheDocument()
 
-  // Tab from the last control wraps to the first one.
-  const items = menu.querySelectorAll<HTMLElement>('a[href], button:not([disabled])')
+  const items = sheet.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input, select')
   items[items.length - 1].focus()
   await userEvent.tab()
   expect(document.activeElement).toBe(items[0])
-  await userEvent.tab({ shift: true })
-  expect(document.activeElement).toBe(items[items.length - 1])
 
   await userEvent.keyboard('{Escape}')
-  expect(burger).toHaveAttribute('aria-expanded', 'false')
-  expect(document.activeElement).toBe(burger)
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Filter' }))
 
-  await userEvent.click(burger)
-  await userEvent.click(within(menu).getByRole('button', { name: 'Tutup menu' }))
-  expect(burger).toHaveAttribute('aria-expanded', 'false')
+  await userEvent.click(screen.getByRole('button', { name: 'Filter' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Terapkan' }))
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
 })
 
-it('closes the drawer after choosing a page', async () => {
+it('Reset in the filter sheet clears the filters and the badge follows the count', async () => {
+  phone()
+  window.history.replaceState(null, '', '/?route=Red&status=berjalan')
   render(<App />)
-  const burger = screen.getByRole('button', { name: 'Buka menu' })
-  await userEvent.click(burger)
-  await userEvent.click(screen.getByRole('link', { name: 'Tentang Data' }))
-  expect(burger).toHaveAttribute('aria-expanded', 'false')
-  expect(window.location.search).toBe('?view=data')
+  expect(await screen.findByRole('button', { name: 'Filter, 2 aktif' })).toBeInTheDocument()
+  await userEvent.click(screen.getByRole('button', { name: 'Filter, 2 aktif' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Reset' }))
+  expect(window.location.search).toBe('')
+  expect(screen.getByRole('button', { name: 'Filter' })).toBeInTheDocument()
+})
+
+it('moves the update time and the auto-refresh switch into the options sheet on phones', async () => {
+  phone()
+  render(<App />)
+  await userEvent.click(await screen.findByRole('button', { name: 'Opsi pembaruan' }))
+  const sheet = screen.getByRole('dialog', { name: 'Pembaruan data' })
+  expect(within(sheet).getByRole('checkbox', { name: 'Otomatis tiap 30 detik' })).toBeChecked()
+  await userEvent.click(within(sheet).getByRole('button', { name: 'Tutup' }))
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
 })
 
 it('collapses the sidebar to icons and remembers the choice', async () => {

@@ -2,7 +2,9 @@ import type { VehicleView } from '../../api/vehicles'
 import EmptyState, { primaryBtn } from '../../components/EmptyState'
 import ErrorState from '../../components/ErrorState'
 import { VehicleCardSkeleton } from '../../components/Skeletons'
+import { useIsMobile } from '../../hooks/useIsMobile'
 import VehicleCard from './VehicleCard'
+import VehicleRow from './VehicleRow'
 
 interface Props {
   vehicles?: VehicleView[]
@@ -29,7 +31,20 @@ export default function VehicleGrid({
   onOpen,
   onShowOnMap,
 }: Props) {
+  const mobile = useIsMobile()
   if (isPending) {
+    if (mobile)
+      return (
+        <div role="status" aria-label="Memuat kendaraan" className="divide-y divide-line" aria-busy>
+          {Array.from({ length: Math.min(skeletonCount, 8) }, (_, i) => (
+            <div key={i} className="flex min-h-[76px] flex-col justify-center gap-2 px-4" aria-hidden>
+              <div className="h-5 w-28 rounded bg-line motion-safe:animate-pulse" />
+              <div className="h-4 w-36 rounded bg-line motion-safe:animate-pulse" />
+              <div className="h-3 w-44 rounded bg-line motion-safe:animate-pulse" />
+            </div>
+          ))}
+        </div>
+      )
     return (
       <div className={GRID} role="status" aria-label="Memuat kendaraan">
         {Array.from({ length: skeletonCount }, (_, i) => (
@@ -57,6 +72,16 @@ export default function VehicleGrid({
       />
     )
   }
+  if (mobile)
+    return (
+      <ul className="divide-y divide-line">
+        {vehicles.map((v) => (
+          <li key={v.id}>
+            <VehicleRow vehicle={v} onOpen={onOpen} onShowOnMap={onShowOnMap} />
+          </li>
+        ))}
+      </ul>
+    )
   return (
     <ul className={GRID}>
       {vehicles.map((v) => (
