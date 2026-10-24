@@ -1,23 +1,37 @@
 # Pantau Armada
 
-Dashboard untuk memantau kendaraan MBTA (Boston) secara langsung, dengan menu samping: daftar kartu kendaraan, filter rute dan trip, pagination lengkap, popup detail dengan peta, peta seluruh armada, dan halaman penjelasan data. Tampilannya mengikuti tema panel Elsaku. Dibuat untuk tes teknis Frontend Engineer (Sistem Manajemen Armada). Nama dan tampilannya sengaja netral, data diambil dari MBTA V3 API.
+Dashboard untuk memantau kendaraan MBTA (Boston) secara langsung, dengan menu samping: kartu statistik yang bisa disaring, pencarian, daftar kartu kendaraan dengan halte terdekat dan status dalam bahasa Indonesia, filter rute dan trip, pagination lengkap, popup detail dengan jalur perjalanan dan perkiraan tiba, peta seluruh armada (OpenStreetMap atau Google Maps), halaman penjelasan data, dan halaman Simulasi Kendala untuk melihat pesan error. Tampilannya mengikuti tema panel Elsaku. Dibuat untuk tes teknis Frontend Engineer (Sistem Manajemen Armada). Nama dan tampilannya sengaja netral, data diambil dari MBTA V3 API.
 
 - Demo: https://tistow.github.io/fleet-management-frontend/
+- Demo alternatif: https://armada.tisto.my.id
 - Video penjelasan: lihat email pengiriman
 
-![Halaman Kendaraan dengan menu samping](docs/screenshot-grid.png)
+![Halaman Kendaraan: kartu statistik, pencarian, filter, dan pagination](docs/kendaraan.jpg)
 
-![Peta Armada](docs/screenshot-peta.png)
+![Kendaraan disaring dengan rute dan status, chip filter tampil](docs/filter-chips.jpg)
+
+![Peta Armada dengan garis rute](docs/peta.jpg)
 
 ## Halaman
 
 | Menu | Isi |
 |---|---|
-| Kendaraan | kartu kendaraan, filter Rute dan Trip, pagination, popup detail |
+| Kendaraan | kartu statistik (total, sedang berjalan, berhenti di halte, GPS tidak update, rute aktif) yang bisa diklik untuk menyaring, kotak cari, kartu kendaraan dengan "Dekat: <halte>", filter Rute dan Trip, pagination, popup detail |
 | Peta Armada | semua kendaraan sesuai filter di satu peta, penanda berwarna menurut rute dan berputar menurut arah hadap, klik penanda membuka popup detail yang sama |
 | Tentang Data | sumber data MBTA, batas permintaan, cara kerja pagination, alasan Trip butuh Rute, teknologi |
+| Simulasi Kendala | sembilan skenario error yang bisa dinyalakan dengan satu tombol, lengkap dengan pratinjau pesannya (lihat "Mendemokan pesan error") |
 
-Menu samping bisa diciutkan jadi ikon di desktop, dan menjadi laci dengan tombol hamburger di HP (fokus terkunci di dalam laci, ESC menutup). Filter Rute dan Trip tetap saat berpindah antara Kendaraan dan Peta Armada.
+Menu samping bisa diciutkan jadi ikon di desktop. Di HP tampilannya meniru aplikasi native: bilah bawah (Kendaraan, Peta, Info), bar atas dengan ikon cari, segarkan, dan filter berlencana, filter dalam bottom sheet, dan popup detail layar penuh. Filter Rute dan Trip tetap saat berpindah antara Kendaraan dan Peta Armada.
+
+![Dropdown trip: grup "Sedang berjalan" dan jam berangkat](docs/trip.jpg)
+
+<table>
+<tr>
+<td><img src="docs/mobile-list.jpg" width="260" alt="Daftar kendaraan di HP"></td>
+<td><img src="docs/mobile-detail.jpg" width="260" alt="Popup detail di HP"></td>
+<td><img src="docs/mobile-filter.jpg" width="260" alt="Filter di HP"></td>
+</tr>
+</table>
 
 ## Menjalankan
 
@@ -28,7 +42,7 @@ npm ci
 npm run dev        # pengembangan lokal
 npm run build      # build produksi ke dist/
 npm run preview    # menjalankan hasil build
-npm test           # vitest (99 tes)
+npm test           # vitest (133 tes)
 npm run lint       # oxlint
 npm run typecheck  # tsc -b --noEmit
 ```
@@ -60,7 +74,7 @@ Popup detail menggambar jalur trip kendaraan (`/trips/{id}?include=shape`, polyl
 
 ```
 src/
-  api/          client.ts (fetch bertipe), errors.ts, jsonapi.ts, vehicles.ts, routes.ts, trips.ts
+  api/          client.ts (fetch bertipe), errors.ts, simulate.ts, jsonapi.ts, vehicles.ts, routes.ts, trips.ts
   hooks/        useUrlState, useFleet, useVehicles, useRouteOptions, useTripOptions,
                 useVehicleDetail, useRateLimitRetry
   components/   MultiSelect, Pagination, PageSizeSelect, StatusBadge, ErrorState,
@@ -70,6 +84,8 @@ src/
                 VehiclesPage, VehicleFilters, VehicleGrid, VehicleCard,
                 VehicleDetailModal, VehicleMap, vehicleIcon
   features/map/ FleetMapPage, FleetMap (peta seluruh armada, lazy)
+  features/simulate/
+                SimulationPage, scenarios
   features/about/
                 DataInfoPage
   lib/          paginate, status, format, tripSelection
@@ -91,6 +107,7 @@ query string (view, route, trip, page, size, vehicle)
         |       +-- Pagination + PageSizeSelect   (paginate() di client)
         +-- view=peta: FleetMapPage (lazy) -> FleetMap (Leaflet + OpenStreetMap, atau GoogleFleetMap lewat ProviderMap)
         +-- view=data: DataInfoPage (lazy)
+        +-- view=simulasi: SimulationPage (lazy), ?simulate=<mode> memalsukan kegagalan di api/simulate.ts
         +-- VehicleDetailModal -> VehicleMap (lazy), dibuka dari kartu maupun penanda peta
 ```
 
@@ -112,8 +129,6 @@ API MBTA tidak mengirim total data, hanya link `first`, `next`, dan `last`. Kare
 - **Trip**: bergantung pada rute yang dipilih, karena `/trips` menolak permintaan tanpa filter (400). Dropdown nonaktif dengan petunjuk sampai ada rute. Satu rute bisa punya sekitar 2.000 trip per hari, jadi trip yang sedang dilalui kendaraan ditampilkan lebih dulu di grup "Sedang berjalan". Melepas rute ikut melepas trip miliknya, dan trip dari URL dipulihkan lewat `filter[id]`.
 - Rute dan trip dikirim ke API sebagai `filter[route]` dan `filter[trip]` (logika AND).
 
-![Dropdown trip mengikuti rute](docs/screenshot-filter.png)
-
 ### State di URL dan perutean
 
 Halaman aktif, filter, halaman, ukuran, dan kendaraan yang dibuka disimpan di query string (`?view=peta&route=Red,1&trip=...&page=2&size=20&vehicle=y1841`), lewat hook `useUrlState` tanpa router. `view` bernilai `kendaraan` (bawaan, tidak ditulis di URL), `peta`, atau `data`. Item menu adalah tautan biasa yang membawa filter, jadi bisa dibuka di tab baru, dan berpindah halaman menutup popup tetapi tetap membawa filter. Satu query kendaraan (`useFleet`) dipakai bersama oleh kartu dan peta, sehingga berpindah antara keduanya tidak menambah request. Tautan bisa dibagikan, tombol Back menutup popup detail dan kembali ke daftar, dan refresh di GitHub Pages aman karena tidak ada path selain `/`. Mengganti filter mengembalikan halaman ke 1.
@@ -122,15 +137,41 @@ Halaman aktif, filter, halaman, ukuran, dan kendaraan yang dibuka disimpan di qu
 
 `api/errors.ts` memetakan error ke pesan Indonesia: jaringan putus, 429, 400, 404, 5xx. Kebijakan retry: jaringan dan 5xx diulang dua kali, 429 sekali, 4xx lain tidak. Header `x-ratelimit-*` tidak bisa dibaca browser (CORS tidak mengeksposnya), jadi saat 429 hitung mundur dihitung sendiri sampai batas menit berikutnya dan permintaan diulang otomatis di sana. Bila pembaruan gagal tetapi data lama masih ada, grid tetap tampil dengan banner "Gagal memperbarui, menampilkan data terakhir". Data diperbarui otomatis tiap 30 detik (bisa dimatikan, berhenti saat tab tersembunyi), plus tombol "Muat ulang".
 
+### Mendemokan pesan error
+
+Menu **Simulasi Kendala** (grup Info, di HP lewat tab Info atau menu titik tiga) menyalakan satu kegagalan palsu supaya semua pesan error bisa dilihat tanpa menunggu MBTA benar-benar bermasalah. Tiap kartu skenario menampilkan pesan yang akan terlihat (dirender oleh `ErrorState` dan `describeError` yang sama dengan aplikasi) dan tombol "Coba" yang menyalakan skenario lalu membuka halaman tempat pesannya muncul.
+
+| Skenario | Yang terjadi | Tautan langsung |
+|---|---|---|
+| Tidak ada koneksi | `fetch` melempar TypeError seperti jaringan putus | `?simulate=offline` |
+| Terlalu banyak permintaan | 429 berbentuk MBTA, dengan hitung mundur dan ulang otomatis | `?simulate=rate-limit` |
+| Server MBTA bermasalah | 503 | `?simulate=server` |
+| Kendaraan tidak ditemukan | 404 pada detail kendaraan | `?simulate=not-found` |
+| Permintaan tidak valid | 400 dengan keterangan teknis | `?simulate=bad-request` |
+| Koneksi lambat | tiap permintaan ditahan 4 detik, kerangka pemuatan terlihat | `?simulate=slow` |
+| Data kosong | berhasil tanpa kendaraan | `?simulate=empty` |
+| Peta gagal dimuat | berkas peta ditolak, popup tetap jalan dengan tombol "Coba lagi" | `?simulate=map-fail` |
+| Nama jalan gagal dimuat | Photon dan Nominatim gagal, baris Lokasi berganti catatan | `?simulate=geocode-fail` |
+
+Selama skenario aktif ada bilah kuning "Mode simulasi: ... aktif" dengan tombol "Matikan simulasi" (yang juga menghapus `?simulate` dari alamat). Pengubahnya hanya `api/simulate.ts`: `apiGet` bertanya dulu apakah ada jawaban palsu untuk permintaan itu, sehingga kegagalan lewat jalur kode yang sama dengan kegagalan sungguhan (`ApiError`, retry, banner). Hanya permintaan dari tab yang membuka tautan itu yang terpengaruh, pengguna lain dan data MBTA tidak tersentuh.
+
+![Halaman Simulasi Kendala](docs/simulasi.jpg)
+
+![Skenario 429 aktif, dengan bilah mode simulasi](docs/error-429.jpg)
+
 ### Halte terdekat, nama jalan, dan GPS basi
 
-Daftar kendaraan meminta `include=route,trip,stop` (dengan `fields[stop]=name`) dalam satu permintaan yang sama: sekitar 25 KB menjadi 34 KB gzip untuk 317 kendaraan, tanpa permintaan tambahan. Kartu menampilkan "Dekat: <halte>" sebagai lokasi utama, lat/lng menjadi baris kecil, dan nama halte ikut dicari oleh kotak cari. Nama jalan di popup detail memakai Photon (cadangan Nominatim), satu permintaan per popup dibuka, di-cache per koordinat 3 desimal (`hooks/useStreetName.ts`, `api/geocode.ts`); bila gagal tidak ada tampilan tambahan. Kendaraan dengan `updated_at` lebih dari 5 menit (`lib/stale.ts`) diberi lencana "GPS tidak update", kartu statistik yang bisa disaring (`?status=basi`), dan penanda peta yang pudar.
+Daftar kendaraan meminta `include=route,trip,stop` (dengan `fields[stop]=name`) dalam satu permintaan yang sama: sekitar 25 KB menjadi 34 KB gzip untuk 317 kendaraan, tanpa permintaan tambahan. Kartu menampilkan "Dekat: <halte>" sebagai lokasi utama, lat/lng menjadi baris kecil, dan nama halte ikut dicari oleh kotak cari. Nama jalan di popup detail memakai Photon (cadangan Nominatim), satu permintaan per popup dibuka, di-cache per koordinat 3 desimal (`hooks/useStreetName.ts`, `api/geocode.ts`); bila gagal, baris Lokasi berganti catatan kecil dan koordinat tetap tampil. Kendaraan dengan `updated_at` lebih dari 5 menit (`lib/stale.ts`) diberi lencana "GPS tidak update", kartu statistik yang bisa disaring (`?status=basi`), dan penanda peta yang pudar.
 
 ### Peta
 
 `FleetMap` (Peta Armada) menaruh semua kendaraan yang sedang disaring sebagai penanda `DivIcon` yang sama dengan peta detail, memuat ulang batasnya hanya saat filter berubah (bukan tiap 30 detik, supaya peta yang sedang digeser tidak melompat), dan juga lazy. `VehicleMap` dimuat dengan `React.lazy` hanya saat popup dibuka, jadi Leaflet (sekitar 155 KB) tidak ikut bundle awal. Penanda memakai `DivIcon` berwarna sesuai rute dan berputar mengikuti arah hadap, sehingga masalah ikon PNG bawaan Leaflet di bundler tidak muncul. Peta bergeser mengikuti posisi saat data diperbarui (detail ikut dimuat ulang tiap 30 detik selama popup terbuka), ukurannya dihitung ulang saat popup selesai tampil, kegagalan memuat tile ditampilkan sebagai pemberitahuan kecil, dan bila chunk peta gagal dimuat popup tetap bisa dipakai dengan tombol "Coba lagi".
 
-![Popup detail dengan peta](docs/screenshot-detail.png)
+![Popup detail dengan jalur perjalanan dan "Perjalanan berikutnya" (OpenStreetMap)](docs/detail.jpg)
+
+Pilihan "OpenStreetMap | Google Maps" ada di pojok peta (Google tampil bila key tersedia):
+
+![Popup detail dengan Google Maps](docs/detail-google.jpg)
 
 ## Checklist fitur
 
@@ -143,12 +184,12 @@ Daftar kendaraan meminta `include=route,trip,stop` (dengan `fields[stop]=name`) 
 | Pagination: rentang, jumlah halaman, pilihan per halaman, pindah halaman | `lib/paginate.ts`, `components/Pagination.tsx`, `components/PageSizeSelect.tsx` |
 | Popup detail kendaraan dengan peta | `VehicleDetailModal.tsx`, `VehicleMap.tsx`, `hooks/useVehicleDetail.ts` |
 | Menu samping dan peta armada (tambahan) | `layout/AppShell.tsx`, `features/map/`, `features/about/` |
-| Loading, kosong, dan error | `components/Skeletons.tsx`, `EmptyState.tsx`, `ErrorState.tsx`, `StaleBanner.tsx` |
+| Loading, kosong, dan error | `components/Skeletons.tsx`, `EmptyState.tsx`, `ErrorState.tsx`, `StaleBanner.tsx`, peragaan lewat `features/simulate/` dan `api/simulate.ts` |
 | Responsif | grid 1 sampai 4 kolom, menu samping jadi laci di HP, popup layar penuh di HP |
-| TypeScript dan tes | `strict`, 99 tes (vitest + Testing Library), lint dan typecheck di CI |
+| TypeScript dan tes | `strict`, 133 tes (vitest + Testing Library), lint dan typecheck di CI |
 | Deploy | GitHub Pages lewat `.github/workflows/deploy.yml` |
 
-![Tampilan HP](docs/screenshot-mobile.png)
+![Tentang Data](docs/data.jpg)
 
 ## Batasan API MBTA yang membentuk desain
 
