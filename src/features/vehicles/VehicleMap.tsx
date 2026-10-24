@@ -13,6 +13,28 @@ interface Props {
   stop?: { lat: number; lng: number; name: string }
 }
 
+/**
+ * The map mounts before the dialog has its final size (lazy chunk + showModal), which leaves most
+ * tiles grey. Re-measure on every container resize and keep the vehicle centered afterwards.
+ */
+function FitContainer({ lat, lng }: { lat: number; lng: number }) {
+  const map = useMap()
+  useEffect(() => {
+    const refit = () => {
+      map.invalidateSize()
+      map.setView([lat, lng], map.getZoom(), { animate: false })
+    }
+    const raf = requestAnimationFrame(refit)
+    const ro = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(refit)
+    ro?.observe(map.getContainer())
+    return () => {
+      cancelAnimationFrame(raf)
+      ro?.disconnect()
+    }
+  }, [map, lat, lng])
+  return null
+}
+
 /** Keeps the vehicle in view when a refresh moves it. */
 function Recenter({ lat, lng }: { lat: number; lng: number }) {
   const map = useMap()
@@ -54,6 +76,7 @@ export default function VehicleMap({ lat, lng, bearing, color, textColor, label,
           </CircleMarker>
         )}
         <Marker position={[lat, lng]} icon={icon} title={`Kendaraan ${label}`} />
+        <FitContainer lat={lat} lng={lng} />
         <Recenter lat={lat} lng={lng} />
       </MapContainer>
       {tileFailed && (

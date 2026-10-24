@@ -1,7 +1,8 @@
 import { Icon } from '@iconify/react'
-import { lazy, Suspense, useEffect, useId, useRef, type ReactNode } from 'react'
+import { lazy, Suspense, useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { ApiError } from '../../api/errors'
 import type { VehicleView } from '../../api/vehicles'
+import ErrorBoundary from '../../components/ErrorBoundary'
 import ErrorState from '../../components/ErrorState'
 import { DetailRowSkeleton } from '../../components/Skeletons'
 import StatusBadge from '../../components/StatusBadge'
@@ -11,7 +12,7 @@ import Spinner from '../../components/Spinner'
 import { occupancyLabel, routeTypeLabel, statusInfo } from '../../lib/status'
 
 // Leaflet (~150 KB) only loads when a popup opens.
-const VehicleMap = lazy(() => import('./VehicleMap'))
+const loadMap = () => lazy(() => import('./VehicleMap'))
 
 interface Props {
   id: string
@@ -53,6 +54,8 @@ export default function VehicleDetailModal({ id, preview, onClose, autoRefresh }
   const ref = useRef<HTMLDialogElement>(null)
   const titleId = useId()
   const q = useVehicleDetail(id, autoRefresh)
+  // React.lazy caches a rejected import for good, so a retry needs a fresh lazy component.
+  const [VehicleMap, setVehicleMap] = useState(loadMap)
   const d = q.data
   const v = d ?? preview
 
@@ -83,9 +86,9 @@ export default function VehicleDetailModal({ id, preview, onClose, autoRefresh }
         onClose()
       }}
       onClick={(e) => e.target === ref.current && onClose()}
-      className="m-auto h-dvh w-full max-w-none overflow-y-auto bg-paper p-0 text-ink backdrop:bg-ink/40 sm:h-auto sm:max-h-[90dvh] sm:max-w-3xl sm:rounded-xl sm:shadow-lg"
+      className="m-auto h-dvh max-h-dvh w-full max-w-none flex-col overflow-hidden bg-paper p-0 text-ink backdrop:bg-ink/40 open:flex sm:h-auto sm:max-h-[90dvh] sm:max-w-3xl sm:rounded-xl sm:shadow-lg"
     >
-      <div className="flex items-start justify-between gap-4 border-b border-line px-5 py-4">
+      <div className="flex shrink-0 items-start justify-between gap-4 border-b border-line px-5 py-4">
         <div>
           <h2 id={titleId} className="font-mono text-xl font-semibold tabular-nums">
             {v ? `Kendaraan ${v.label}` : 'Memuat kendaraan'}
@@ -108,6 +111,7 @@ export default function VehicleDetailModal({ id, preview, onClose, autoRefresh }
         </button>
       </div>
 
+      <div className="min-h-0 flex-1 overflow-y-auto">
       {q.isError && !v ? (
         <div className="p-5">
           <ErrorState error={q.error} onRetry={retry} />
@@ -165,7 +169,7 @@ export default function VehicleDetailModal({ id, preview, onClose, autoRefresh }
                       <>
                         <Row label="Tujuan">{d.trip.headsign || '-'}</Row>
                         {d.trip.name && <Row label="Nama">{d.trip.name}</Row>}
-                        <Row label="Block">
+                        <Row label="Blok">
                           <span className="font-mono">{d.trip.blockId || '-'}</span>
                         </Row>
                         <Row label="Kursi roda">{access(d.trip.wheelchair)}</Row>
@@ -202,6 +206,23 @@ export default function VehicleDetailModal({ id, preview, onClose, autoRefresh }
           </div>
           <div className="min-h-64">
             {v && v.lat != null && v.lng != null ? (
+              <ErrorBoundary
+                fallback={(reset) => (
+                  <div role="alert" className="flex h-full min-h-64 flex-col items-center justify-center gap-3 rounded-lg bg-canvas px-4 text-center text-sm text-ink-muted">
+                    Peta gagal dimuat
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setVehicleMap(loadMap)
+                        reset()
+                      }}
+                      className="rounded-lg border border-line bg-paper px-3 py-1.5 font-medium text-ink hover:bg-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                    >
+                      Coba lagi
+                    </button>
+                  </div>
+                )}
+              >
               <Suspense
                 fallback={
                   <div className="flex h-full min-h-64 items-center justify-center rounded-lg bg-canvas motion-safe:animate-pulse">
@@ -219,6 +240,7 @@ export default function VehicleDetailModal({ id, preview, onClose, autoRefresh }
                   stop={d?.stop && d.stop.lat != null && d.stop.lng != null ? { lat: d.stop.lat, lng: d.stop.lng, name: d.stop.name } : undefined}
                 />
               </Suspense>
+              </ErrorBoundary>
             ) : (
               <div className="flex h-full min-h-64 items-center justify-center rounded-lg bg-canvas px-4 text-center text-sm text-ink-muted">
                 {d ? 'Posisi kendaraan belum tersedia' : <Spinner className="size-6" />}
@@ -227,6 +249,7 @@ export default function VehicleDetailModal({ id, preview, onClose, autoRefresh }
           </div>
         </div>
       )}
+      </div>
     </dialog>
   )
 }
