@@ -33,7 +33,7 @@ function Frame({ journey, lat, lng }: { journey?: Journey; lat: number; lng: num
     if (!map || !journey || done.current === journey.frameKey) return
     done.current = journey.frameKey
     const b = new google.maps.LatLngBounds({ lat, lng })
-    journey.ahead.forEach(([la, ln]) => b.extend({ lat: la, lng: ln }))
+    ;(journey.ahead.length > 1 ? journey.ahead : journey.passed).forEach(([la, ln]) => b.extend({ lat: la, lng: ln }))
     map.fitBounds(b, 30)
   }, [map, journey, lat, lng])
   return null

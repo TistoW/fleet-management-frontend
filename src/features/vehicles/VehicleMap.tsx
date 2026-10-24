@@ -46,7 +46,7 @@ function Frame({ journey, lat, lng }: { journey?: Journey; lat: number; lng: num
   useEffect(() => {
     if (!journey || done.current === journey.frameKey) return
     done.current = journey.frameKey
-    map.fitBounds(L.latLngBounds([...journey.ahead, [lat, lng]]), { padding: [30, 30], maxZoom: 16, animate: false })
+    map.fitBounds(L.latLngBounds([...(journey.ahead.length > 1 ? journey.ahead : journey.passed), [lat, lng]]), { padding: [30, 30], maxZoom: 16, animate: false })
   }, [map, journey, lat, lng])
   return null
 }
@@ -76,7 +76,7 @@ export default function VehicleMap({ lat, lng, bearing, color, textColor, label,
         />
         {journey && (
           <>
-            <Polyline positions={journey.passed} pathOptions={{ color, weight: 4, opacity: 0.3, dashArray: '2 8' }} />
+            <Polyline positions={journey.passed} pathOptions={{ color, weight: 4, opacity: 0.35, dashArray: journey.ahead.length > 1 ? '2 8' : undefined }} />
             <Polyline positions={journey.ahead} pathOptions={{ color, weight: 5, opacity: 0.9 }} />
             {journey.stops.slice(0, -1).map((s) => (
               <CircleMarker key={`${s.name}-${s.lat}`} center={[s.lat, s.lng]} radius={3.5} pathOptions={{ color, weight: 2, fillColor: '#fff', fillOpacity: 1 }}>

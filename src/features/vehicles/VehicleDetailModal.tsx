@@ -11,6 +11,7 @@ import { useStreetName } from '../../hooks/useStreetName'
 import { useVehicleDetail } from '../../hooks/useVehicleDetail'
 import { formatClockWib, formatCoord, formatEta, formatHmWib, formatRelative } from '../../lib/format'
 import { splitAtClosest, type Journey } from '../../lib/geo'
+import { journeyState, remainingStops } from '../../lib/journeyState'
 import Spinner from '../../components/Spinner'
 import ProviderMap from '../map/ProviderMap'
 import { occupancyLabel, routeTypeLabel, statusInfo } from '../../lib/status'
@@ -70,15 +71,24 @@ export default function VehicleDetailModal({ id, preview, onClose, autoRefresh }
   const shape = useTripShape(tripId)
   const upcomingQ = useUpcoming(tripId, autoRefresh)
   const [showAll, setShowAll] = useState(false)
-  const upcoming = useMemo(() => upcomingQ.data ?? [], [upcomingQ.data])
+  const stopId = d?.stopId ?? null
+  const dStop = d?.stop
+  const stopped = d?.status === 'STOPPED_AT'
+  const upcoming = useMemo(() => remainingStops(upcomingQ.data ?? [], stopId, stopped), [upcomingQ.data, stopId, stopped])
+  const jState = journeyState({ tripId, settled: !shape.isPending && !upcomingQ.isPending, hasShape: (shape.data?.length ?? 0) > 1, upcoming })
   const vLat = v?.lat
   const vLng = v?.lng
   // The shape is cached per trip; only the split point moves with each 30 s position update.
   const journey = useMemo((): Journey | undefined => {
     if (!tripId || !shape.data || shape.data.length < 2 || vLat == null || vLng == null) return undefined
+    if (jState === 'terminus') {
+      // Nothing left to visit: show the whole line faded, with the flag on the terminus where the vehicle sits.
+      const end = dStop?.lat != null && dStop.lng != null ? [{ lat: dStop.lat, lng: dStop.lng, name: dStop.name }] : []
+      return { passed: shape.data, ahead: [], stops: end, frameKey: tripId }
+    }
     const stops = upcoming.filter((s) => s.lat != null && s.lng != null).map((s) => ({ lat: s.lat!, lng: s.lng!, name: s.name }))
     return { ...splitAtClosest(shape.data, [vLat, vLng]), stops, frameKey: tripId }
-  }, [tripId, shape.data, upcoming, vLat, vLng])
+  }, [tripId, shape.data, upcoming, vLat, vLng, jState, dStop])
   const anyCarriageData = !!d?.carriages.some((c) => hasOcc(c.occupancy_status))
   const missing = d
     ? [d.trip && d.trip.bikes === 0 && 'Sepeda', d.speed == null && 'Kecepatan', !hasOcc(d.occupancy) && !anyCarriageData && 'Okupansi'].filter((x): x is string => !!x)
@@ -219,6 +229,17 @@ export default function VehicleDetailModal({ id, preview, onClose, autoRefresh }
                     <SkeletonRows />
                   )}
                 </Section>
+                {d && (jState === 'no-trip' || jState === 'unavailable' || jState === 'terminus') && (
+                  <Section title="Perjalanan berikutnya">
+                    <p className="py-1.5 text-sm text-ink-muted">
+                      {jState === 'no-trip'
+                        ? 'Kendaraan tidak sedang menjalankan perjalanan.'
+                        : jState === 'terminus'
+                          ? `Kendaraan sudah tiba di halte akhir${d.stop ? ` (${d.stop.name})` : ''}. Menunggu perjalanan berikutnya.`
+                          : 'Rute untuk perjalanan ini belum tersedia dari MBTA.'}
+                    </p>
+                  </Section>
+                )}
                 {upcoming.length > 0 && (
                   <Section title={upcoming[0].kind === 'schedule' ? 'Jadwal berikutnya' : 'Perjalanan berikutnya'}>
                     {(showAll ? upcoming : upcoming.slice(0, 5)).map((s, i) => {
