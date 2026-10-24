@@ -16,7 +16,7 @@ npm ci
 npm run dev        # pengembangan lokal
 npm run build      # build produksi ke dist/
 npm run preview    # menjalankan hasil build
-npm test           # vitest (65 tes)
+npm test           # vitest (69 tes)
 npm run lint       # oxlint
 npm run typecheck  # tsc -b --noEmit
 ```
@@ -68,11 +68,11 @@ Semua data diambil dengan `fetch` bawaan browser lewat satu fungsi bertipe, `api
 
 ### Tampilan
 
-React 19 dengan function component dan hooks, TypeScript strict, Tailwind CSS v4 dengan token warna sendiri di `src/index.css`, ikon Solar lewat Iconify, dan peta Leaflet (react-leaflet) dengan tile OpenStreetMap. Tidak memakai UI kit. Dropdown multi-select ditulis sendiri mengikuti pola ARIA combobox dan listbox, dan popup memakai elemen native `<dialog>` supaya ESC, fokus, dan penguncian latar ditangani browser.
+React 19 dengan function component dan hooks, TypeScript strict, Tailwind CSS v4 dengan token warna sendiri di `src/index.css`, ikon Solar dari Iconify yang dibundel (tanpa permintaan ke api.iconify.design), font Plus Jakarta Sans self-host lewat Fontsource, dan peta Leaflet (react-leaflet) dengan tile OpenStreetMap. Tidak memakai UI kit. Dropdown multi-select ditulis sendiri mengikuti pola ARIA combobox dan listbox, dan popup memakai elemen native `<dialog>` supaya ESC, fokus, dan penguncian latar ditangani browser.
 
 ### Pagination
 
-API MBTA tidak mengirim total data, hanya link `first`, `next`, dan `last`. Karena seluruh armada hanya sekitar 17 KB (gzip), saya ambil semua kendaraan sesuai filter dalam satu request, lalu fungsi murni `paginate()` di `src/lib/paginate.ts` menghitung rentang ("Menampilkan 11-20 dari 330 data"), jumlah halaman, dan potongan datanya. Dengan cara ini total selalu pasti, urutan stabil (`sort=label`), pindah halaman tidak memakai kuota 20 permintaan per menit, dan data yang bergeser antar request tidak membuat kendaraan dobel atau terlewat. Pilihan per halaman: 5, 10, 20, 50. Saat ukuran diganti, item pertama yang sedang dilihat tetap tampil.
+API MBTA tidak mengirim total data, hanya link `first`, `next`, dan `last`. Karena seluruh armada hanya sekitar 17 KB (gzip), saya ambil semua kendaraan sesuai filter dalam satu request, lalu fungsi murni `paginate()` di `src/lib/paginate.ts` menghitung rentang ("Menampilkan 11-20 dari 330 kendaraan"), jumlah halaman, dan potongan datanya. Dengan cara ini total selalu pasti, urutan stabil (`sort=label`), pindah halaman tidak memakai kuota 20 permintaan per menit, dan data yang bergeser antar request tidak membuat kendaraan dobel atau terlewat. Pilihan per halaman: 5, 10, 20, 50. Saat ukuran diganti, item pertama yang sedang dilihat tetap tampil.
 
 ### Filter
 
@@ -84,7 +84,7 @@ API MBTA tidak mengirim total data, hanya link `first`, `next`, dan `last`. Kare
 
 ### State di URL
 
-Filter, halaman, ukuran, dan kendaraan yang dibuka disimpan di query string (`?route=Red,1&trip=...&page=2&size=20&vehicle=y1841`), lewat hook `useUrlState` tanpa router. Tautan bisa dibagikan, tombol Back bekerja, dan refresh di GitHub Pages aman karena tidak ada path selain `/`. Mengganti filter mengembalikan halaman ke 1.
+Filter, halaman, ukuran, dan kendaraan yang dibuka disimpan di query string (`?route=Red,1&trip=...&page=2&size=20&vehicle=y1841`), lewat hook `useUrlState` tanpa router. Tautan bisa dibagikan, tombol Back menutup popup detail dan kembali ke daftar, dan refresh di GitHub Pages aman karena tidak ada path selain `/`. Mengganti filter mengembalikan halaman ke 1.
 
 ### Error dan batas permintaan
 
@@ -92,7 +92,7 @@ Filter, halaman, ukuran, dan kendaraan yang dibuka disimpan di query string (`?r
 
 ### Peta
 
-`VehicleMap` dimuat dengan `React.lazy` hanya saat popup dibuka, jadi Leaflet (sekitar 155 KB) tidak ikut bundle awal. Penanda memakai `DivIcon` berwarna sesuai rute dan berputar mengikuti arah hadap, sehingga masalah ikon PNG bawaan Leaflet di bundler tidak muncul. Peta bergeser mengikuti posisi saat data diperbarui, dan kegagalan memuat tile ditampilkan sebagai pemberitahuan kecil tanpa merusak popup.
+`VehicleMap` dimuat dengan `React.lazy` hanya saat popup dibuka, jadi Leaflet (sekitar 155 KB) tidak ikut bundle awal. Penanda memakai `DivIcon` berwarna sesuai rute dan berputar mengikuti arah hadap, sehingga masalah ikon PNG bawaan Leaflet di bundler tidak muncul. Peta bergeser mengikuti posisi saat data diperbarui (detail ikut dimuat ulang tiap 30 detik selama popup terbuka), ukurannya dihitung ulang saat popup selesai tampil, kegagalan memuat tile ditampilkan sebagai pemberitahuan kecil, dan bila chunk peta gagal dimuat popup tetap bisa dipakai dengan tombol "Coba lagi".
 
 ![Popup detail dengan peta](docs/screenshot-detail.jpg)
 
@@ -108,7 +108,7 @@ Filter, halaman, ukuran, dan kendaraan yang dibuka disimpan di query string (`?r
 | Popup detail kendaraan dengan peta | `VehicleDetailModal.tsx`, `VehicleMap.tsx`, `hooks/useVehicleDetail.ts` |
 | Loading, kosong, dan error | `components/Skeletons.tsx`, `EmptyState.tsx`, `ErrorState.tsx`, `StaleBanner.tsx` |
 | Responsif | grid 1 sampai 4 kolom, popup layar penuh di HP |
-| TypeScript dan tes | `strict`, 65 tes (vitest + Testing Library), lint dan typecheck di CI |
+| TypeScript dan tes | `strict`, 69 tes (vitest + Testing Library), lint dan typecheck di CI |
 | Deploy | GitHub Pages lewat `.github/workflows/deploy.yml` |
 
 ![Tampilan HP](docs/screenshot-mobile.png)

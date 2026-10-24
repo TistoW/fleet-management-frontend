@@ -57,7 +57,7 @@ function toView(v: Vehicle, route?: Route): VehicleView {
   }
 }
 
-// ponytail: client-side pagination, ganti ke page[offset] + total dari links.last bila armada > ~5.000
+// Pagination is client-side on purpose; switch to page[offset] with the total from links.last if the fleet passes ~5,000.
 export async function fetchVehicles(
   filter: VehicleFilter = {},
   signal?: AbortSignal,

@@ -16,7 +16,7 @@ export default function Pagination({ page, pageCount, onPageChange }: Props) {
   const first = page <= 1
   const last = page >= pageCount
   return (
-    <nav aria-label="Pagination" className="flex flex-wrap items-center justify-between gap-3">
+    <nav aria-label="Navigasi halaman" className="flex flex-wrap items-center justify-between gap-3">
       <p className="text-sm text-ink-muted tabular-nums">Halaman {page} dari {pageCount}</p>
       <div className="flex items-center gap-1">
         <button type="button" className={`${btn} ${idle} hidden sm:inline-flex`} disabled={first} onClick={() => onPageChange(1)} aria-label="Halaman pertama">
