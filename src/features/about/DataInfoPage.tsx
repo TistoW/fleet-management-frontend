@@ -22,7 +22,8 @@ const STACK: [string, string][] = [
   ['React 19 + TypeScript', 'komponen fungsi dan hooks, mode strict'],
   ['TanStack Query', 'cache, refetch otomatis, retry'],
   ['Tailwind CSS v4', 'token warna dan font di satu berkas'],
-  ['Leaflet + OpenStreetMap', 'peta, dimuat hanya saat dibutuhkan'],
+  ['Leaflet + OpenStreetMap', 'peta bawaan, dimuat hanya saat dibutuhkan'],
+  ['Google Maps (opsional)', 'dipilih lewat tombol di peta, skripnya baru dimuat saat dipilih'],
   ['Solar (Iconify)', 'ikon yang dibundel, tanpa panggilan ke luar'],
   ['Vitest + Testing Library', 'tes unit dan komponen'],
 ]

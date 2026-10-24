@@ -50,7 +50,7 @@ export default function VehicleMap({ lat, lng, bearing, color, textColor, label,
 
   return (
     <div className="relative isolate z-0 h-full min-h-64 overflow-hidden rounded-lg border border-line">
-      <MapContainer center={[lat, lng]} zoom={15} scrollWheelZoom={false} className="h-full min-h-64 w-full">
+      <MapContainer center={[lat, lng]} zoom={15} scrollWheelZoom wheelPxPerZoomLevel={80} className="h-full min-h-64 w-full">
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

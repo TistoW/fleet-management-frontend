@@ -10,10 +10,13 @@ import { useStreetName } from '../../hooks/useStreetName'
 import { useVehicleDetail } from '../../hooks/useVehicleDetail'
 import { formatClockWib, formatCoord, formatRelative } from '../../lib/format'
 import Spinner from '../../components/Spinner'
+import ProviderMap from '../map/ProviderMap'
 import { occupancyLabel, routeTypeLabel, statusInfo } from '../../lib/status'
 
 // Leaflet (~150 KB) only loads when a popup opens.
 const loadMap = () => lazy(() => import('./VehicleMap'))
+// The Google chunk and its script load only after the user switches to Google.
+const GoogleVehicle = lazy(() => import('../map/GoogleVehicleMap'))
 
 interface Props {
   id: string
@@ -49,6 +52,7 @@ const SkeletonRows = () => (
   </div>
 )
 
+const hasOcc = (raw: string | null | undefined) => occupancyLabel(raw) !== 'Tidak ada data'
 const access = (n: number) => (n === 1 ? 'Ya' : n === 2 ? 'Tidak' : 'Tidak ada data')
 
 export default function VehicleDetailModal({ id, preview, onClose, autoRefresh }: Props) {
@@ -60,6 +64,10 @@ export default function VehicleDetailModal({ id, preview, onClose, autoRefresh }
   const d = q.data
   const v = d ?? preview
   const street = useStreetName(v?.lat, v?.lng)
+  const anyCarriageData = !!d?.carriages.some((c) => hasOcc(c.occupancy_status))
+  const missing = d
+    ? [d.trip && d.trip.bikes === 0 && 'Sepeda', d.speed == null && 'Kecepatan', !hasOcc(d.occupancy) && !anyCarriageData && 'Okupansi'].filter((x): x is string => !!x)
+    : []
 
   // Native <dialog>: the browser makes the page inert (focus trap) and handles ESC.
   useEffect(() => {
@@ -187,7 +195,7 @@ export default function VehicleDetailModal({ id, preview, onClose, autoRefresh }
                           <span className="font-mono">{d.trip.blockId || '-'}</span>
                         </Row>
                         <Row label="Kursi roda">{access(d.trip.wheelchair)}</Row>
-                        <Row label="Sepeda">{access(d.trip.bikes)}</Row>
+                        {d.trip.bikes !== 0 && <Row label="Sepeda">{access(d.trip.bikes)}</Row>}
                       </>
                     ) : (
                       <Row label="Trip">Tidak ada trip aktif</Row>
@@ -202,14 +210,22 @@ export default function VehicleDetailModal({ id, preview, onClose, autoRefresh }
                       <Row label="Halte saat ini">
                         {d.stop ? `${d.stop.name}${d.stop.platform ? ` (${d.stop.platform})` : ''}` : '-'}
                       </Row>
-                      <Row label="Kecepatan">{d.speed == null ? '-' : `${(d.speed * 3.6).toFixed(0)} km/jam`}</Row>
+                      {d.speed != null && <Row label="Kecepatan">{`${(d.speed * 3.6).toFixed(0)} km/jam`}</Row>}
                       <Row label="Arah hadap">{d.bearing == null ? '-' : `${d.bearing}°`}</Row>
-                      <Row label="Okupansi">{occupancyLabel(d.occupancy)}</Row>
+                      {hasOcc(d.occupancy) && <Row label="Okupansi">{occupancyLabel(d.occupancy)}</Row>}
                       {d.carriages.length > 0 && (
                         <Row label="Gerbong">
-                          {d.carriages.map((c) => `${c.label}: ${occupancyLabel(c.occupancy_status)}`).join(', ')}
+                          <span className="flex flex-wrap justify-end gap-1.5">
+                            {d.carriages.map((c) => (
+                              <span key={c.label} className="rounded-md bg-ink/5 px-1.5 py-0.5 font-mono text-xs">
+                                {c.label}
+                                {anyCarriageData && hasOcc(c.occupancy_status) ? ` · ${occupancyLabel(c.occupancy_status)}` : ''}
+                              </span>
+                            ))}
+                          </span>
                         </Row>
                       )}
+                      {missing.length > 0 && <p className="pt-1 text-xs text-ink-muted">Data tidak tersedia: {missing.join(', ')}</p>}
                       <p className="pt-1 text-xs text-ink-muted">
                         Kode status API: <span className="font-mono">{d.status ?? 'null'}</span>
                       </p>
@@ -221,7 +237,7 @@ export default function VehicleDetailModal({ id, preview, onClose, autoRefresh }
               </>
             )}
           </div>
-          <div className="h-56 min-h-56 overflow-hidden max-sm:order-first max-sm:-mx-4 max-sm:-mt-4 sm:h-auto sm:min-h-64 sm:rounded-xl">
+          <div className="relative h-56 min-h-56 overflow-hidden max-sm:order-first max-sm:-mx-4 max-sm:-mt-4 sm:h-auto sm:min-h-64 sm:rounded-xl">
             {v && v.lat != null && v.lng != null ? (
               <ErrorBoundary
                 fallback={(reset) => (
@@ -247,14 +263,18 @@ export default function VehicleDetailModal({ id, preview, onClose, autoRefresh }
                   </div>
                 }
               >
-                <VehicleMap
-                  lat={v.lat}
-                  lng={v.lng}
-                  bearing={d?.bearing ?? null}
-                  color={route?.color ?? '#5B6863'}
-                  textColor={route?.textColor ?? '#FFFFFF'}
-                  label={v.label}
-                  stop={d?.stop && d.stop.lat != null && d.stop.lng != null ? { lat: d.stop.lat, lng: d.stop.lng, name: d.stop.name } : undefined}
+                <ProviderMap
+                  Osm={VehicleMap}
+                  Google={GoogleVehicle}
+                  mapProps={{
+                    lat: v.lat,
+                    lng: v.lng,
+                    bearing: d?.bearing ?? null,
+                    color: route?.color ?? '#5B6863',
+                    textColor: route?.textColor ?? '#FFFFFF',
+                    label: v.label,
+                    stop: d?.stop && d.stop.lat != null && d.stop.lng != null ? { lat: d.stop.lat, lng: d.stop.lng, name: d.stop.name } : undefined,
+                  }}
                 />
               </Suspense>
               </ErrorBoundary>

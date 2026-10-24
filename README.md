@@ -43,6 +43,15 @@ VITE_MBTA_API_KEY=isi_key_anda
 
 Variabel ini opsional. Key di aplikasi frontend ikut masuk ke bundle dan terlihat publik, jadi perlakukan sebagai konfigurasi, bukan rahasia.
 
+### Peta: OpenStreetMap (bawaan) atau Google Maps
+
+Peta bawaan adalah Leaflet + OpenStreetMap dan tidak butuh key. Untuk menampilkan pilihan Google Maps, isi `VITE_GOOGLE_MAPS_API_KEY` (Maps JavaScript API) di `.env.local`; di GitHub Actions lewat secret dengan nama yang sama. Key ini **tidak boleh di-commit**. Karena akan terlihat di browser, batasi di Google Cloud Console: Application restrictions = Websites (HTTP referrer), mis. `https://tistow.github.io/*`, `https://armada.tisto.my.id/*`, `http://localhost:*`, dan API restrictions = Maps JavaScript API saja.
+
+- Tanpa key: hanya OpenStreetMap, tombol pilihan tidak tampil.
+- Dengan key: OpenStreetMap tetap bawaan. Pojok kanan atas peta (popup dan Peta Armada) ada pilihan "OpenStreetMap | Google Maps"; pilihannya diingat di `localStorage`. Skrip Google baru dimuat setelah pengguna memilih Google.
+- Bila Google gagal (key ditolak karena referrer, API belum aktif, atau skrip gagal dimuat), peta otomatis kembali ke OpenStreetMap dengan catatan kecil.
+- Roda mouse di atas peta memperbesar/memperkecil peta (tidak menggulir popup); di HP tetap cubit untuk zoom dan satu jari untuk menggeser.
+
 ## Arsitektur
 
 ```
@@ -76,7 +85,7 @@ query string (view, route, trip, page, size, vehicle)
         |       +-- VehicleFilters (MultiSelect x2)
         |       +-- VehicleGrid -> VehicleCard -> StatusBadge
         |       +-- Pagination + PageSizeSelect   (paginate() di client)
-        +-- view=peta: FleetMapPage (lazy) -> FleetMap (Leaflet + OpenStreetMap)
+        +-- view=peta: FleetMapPage (lazy) -> FleetMap (Leaflet + OpenStreetMap, atau GoogleFleetMap lewat ProviderMap)
         +-- view=data: DataInfoPage (lazy)
         +-- VehicleDetailModal -> VehicleMap (lazy), dibuka dari kartu maupun penanda peta
 ```

@@ -11,10 +11,13 @@ import type { UrlState } from '../../hooks/useUrlState'
 import { applyStatus, fleetStats } from '../../lib/fleetStats'
 import { applySearch } from '../../lib/search'
 import { statusInfo } from '../../lib/status'
+import ProviderMap from './ProviderMap'
 import VehicleFilters from '../vehicles/VehicleFilters'
 
 // Leaflet only loads when this view opens.
 const loadMap = () => lazy(() => import('./FleetMap'))
+
+const GoogleFleet = lazy(() => import('./GoogleFleetMap'))
 
 const LEGEND_MAX = 8
 
@@ -101,7 +104,7 @@ export default function FleetMapPage({ url, setUrl, fleet, sheetOpen, onSheetClo
               </div>
             }
           >
-            <FleetMap vehicles={placed} fitKey={fitKey} focusId={url.focus} onOpen={(id) => setUrl({ vehicle: id })} />
+            <ProviderMap Osm={FleetMap} Google={GoogleFleet} mapProps={{ vehicles: placed, fitKey, focusId: url.focus, onOpen: (id: string) => setUrl({ vehicle: id }) }} />
           </Suspense>
         </ErrorBoundary>
         <button

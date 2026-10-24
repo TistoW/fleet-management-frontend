@@ -66,7 +66,7 @@ export default function FleetMap({ vehicles, fitKey, focusId, onOpen }: Props) {
 
   return (
     <div className="absolute inset-0 isolate z-0 overflow-hidden rounded-2xl border border-line max-md:rounded-none max-md:border-0">
-      <MapContainer center={BOSTON} zoom={11} className="size-full">
+      <MapContainer center={BOSTON} zoom={11} scrollWheelZoom wheelPxPerZoomLevel={80} className="size-full">
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
