@@ -3,12 +3,16 @@ import { useCallback, useSyncExternalStore } from 'react'
 export const PAGE_SIZES = [5, 10, 20, 50] as const
 const DEFAULT_SIZE = 10
 
+export const VIEWS = ['kendaraan', 'peta', 'data'] as const
+export type View = (typeof VIEWS)[number]
+
 export interface UrlState {
   routes: string[]
   trips: string[]
   page: number
   size: number
   vehicle: string | null
+  view: View
 }
 
 const list = (v: string | null) => (v ? v.split(',').filter(Boolean) : [])
@@ -23,6 +27,7 @@ export function parseUrlState(search: string): UrlState {
     page: Number.isInteger(page) && page >= 1 ? page : 1,
     size: (PAGE_SIZES as readonly number[]).includes(size) ? size : DEFAULT_SIZE,
     vehicle: p.get('vehicle') || null,
+    view: (VIEWS as readonly string[]).includes(p.get('view') ?? '') ? (p.get('view') as View) : 'kendaraan',
   }
 }
 
@@ -34,6 +39,7 @@ export function buildSearch(s: UrlState): string {
   if (s.page > 1) p.set('page', String(s.page))
   if (s.size !== DEFAULT_SIZE) p.set('size', String(s.size))
   if (s.vehicle) p.set('vehicle', s.vehicle)
+  if (s.view !== 'kendaraan') p.set('view', s.view)
   const q = p.toString()
   return q ? `?${q}` : ''
 }
@@ -52,7 +58,7 @@ function subscribe(cb: () => void) {
 const getSearch = () => window.location.search
 
 /**
- * Filters, page, size and the open vehicle live in the query string.
+ * Filters, page, size, the open vehicle and the active view (?view=peta|data) live in the query string.
  * Changing a filter resets the page to 1. `replace` is for automatic corrections
  * (such as clamping the page) so they do not add a Back entry.
  */
@@ -63,7 +69,8 @@ export function useUrlState() {
   const update = useCallback((patch: Partial<UrlState>, opts: { replace?: boolean } = {}) => {
     const cur = parseUrlState(window.location.search)
     const filterChanged = 'routes' in patch || 'trips' in patch
-    const next = { ...cur, ...(filterChanged ? { page: 1 } : {}), ...patch }
+    // Switching view closes any open popup; filters, page and size carry over.
+    const next = { ...cur, ...(filterChanged ? { page: 1 } : {}), ...('view' in patch ? { vehicle: null } : {}), ...patch }
     const url = window.location.pathname + buildSearch(next)
     if (url === window.location.pathname + window.location.search) return
     // The marker lets the page tell an in-app popup (close = Back) from a direct ?vehicle= load.

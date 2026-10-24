@@ -17,6 +17,7 @@ it('menampilkan judul aplikasi dan rentang data', async () => {
       new Response(JSON.stringify(url.pathname === '/routes' ? { data: [] } : doc)),
     ))
   render(<App />)
-  expect(screen.getByRole('heading', { name: 'Pantau Armada' })).toBeInTheDocument()
+  expect(screen.getByText('Pantau Armada')).toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: 'Kendaraan' })).toBeInTheDocument()
   expect(await screen.findByText('Menampilkan 1-1 dari 1 kendaraan')).toBeInTheDocument()
 })

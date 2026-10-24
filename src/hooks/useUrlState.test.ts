@@ -9,8 +9,9 @@ it('membaca parameter dan memakai nilai bawaan', () => {
     page: 3,
     size: 20,
     vehicle: 'y1',
+    view: 'kendaraan',
   })
-  expect(parseUrlState('')).toEqual({ routes: [], trips: [], page: 1, size: 10, vehicle: null })
+  expect(parseUrlState('')).toEqual({ routes: [], trips: [], page: 1, size: 10, vehicle: null, view: 'kendaraan' })
 })
 
 it('menolak page dan size yang tidak valid', () => {
@@ -23,6 +24,16 @@ it('menolak page dan size yang tidak valid', () => {
 it('menulis ulang tanpa nilai bawaan', () => {
   expect(buildSearch(parseUrlState(''))).toBe('')
   expect(buildSearch(parseUrlState('?route=Red&page=2&size=5'))).toBe('?route=Red&page=2&size=5')
+})
+
+it('membaca halaman aktif dan mengosongkan kendaraan saat berpindah', () => {
+  expect(parseUrlState('?view=peta').view).toBe('peta')
+  expect(parseUrlState('?view=lain').view).toBe('kendaraan')
+  expect(buildSearch(parseUrlState('?view=data&route=Red'))).toBe('?route=Red&view=data')
+  window.history.replaceState(null, '', '/?route=Red&vehicle=y1')
+  const { result } = renderHook(() => useUrlState())
+  act(() => result.current[1]({ view: 'peta' }))
+  expect(window.location.search).toBe('?route=Red&view=peta')
 })
 
 describe('riwayat popup kendaraan', () => {
