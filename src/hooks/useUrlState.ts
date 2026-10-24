@@ -6,7 +6,7 @@ const DEFAULT_SIZE = 10
 export const VIEWS = ['kendaraan', 'peta', 'data'] as const
 export type View = (typeof VIEWS)[number]
 
-export const STATUS_FILTERS = ['berjalan', 'berhenti'] as const
+export const STATUS_FILTERS = ['berjalan', 'berhenti', 'basi'] as const
 export type StatusFilter = (typeof STATUS_FILTERS)[number]
 
 export interface UrlState {

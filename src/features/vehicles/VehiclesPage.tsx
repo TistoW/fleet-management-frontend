@@ -69,11 +69,14 @@ export default function VehiclesPage({ url, setUrl, fleet, sheetOpen, onSheetClo
               <StatCard icon="solar:stop-circle-linear" tint="bg-stopped-soft text-stopped" label="Berhenti di halte" value={stats.berhenti} active={url.status === 'berhenti'} onClick={() => toggle('berhenti')} />
             </li>
             <li>
+              <StatCard icon="solar:danger-triangle-linear" tint="bg-arriving-soft text-arriving" label="GPS tidak update" value={stats.basi} active={url.status === 'basi'} onClick={() => toggle('basi')} />
+            </li>
+            <li>
               <StatCard icon="solar:map-point-wave-linear" tint="bg-arriving-soft text-arriving" label="Rute aktif" value={stats.routes} />
             </li>
           </>
         ) : (
-          [0, 1, 2, 3].map((i) => (
+          [0, 1, 2, 3, 4].map((i) => (
             <li key={i}>
               <StatCardSkeleton />
             </li>

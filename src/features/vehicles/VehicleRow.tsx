@@ -1,7 +1,9 @@
 import { Icon } from '@iconify/react'
 import type { VehicleView } from '../../api/vehicles'
 import Highlight from '../../components/Highlight'
+import StaleBadge from '../../components/StaleBadge'
 import { formatRelative, formatRelativeShort } from '../../lib/format'
+import { isStale } from '../../lib/stale'
 import { statusInfo } from '../../lib/status'
 
 interface Props {
@@ -15,6 +17,7 @@ interface Props {
 export default function VehicleRow({ vehicle: v, onOpen, onShowOnMap, query = '' }: Props) {
   const route = v.route
   const s = statusInfo(v.status)
+  const stale = isStale(v.updatedAt)
   const aria = `Kendaraan ${v.label}${route ? `, ${route.name}` : ''}, ${s.label}`
   return (
     <div className="flex items-center">
@@ -41,11 +44,12 @@ export default function VehicleRow({ vehicle: v, onOpen, onShowOnMap, query = ''
             <Icon icon={s.icon} className="size-3.5" aria-hidden />
             {s.label}
           </span>
+          {stale && <StaleBadge small />}
         </span>
         <span className="flex min-w-0 items-center gap-1 text-xs text-ink-muted">
           <Icon icon="solar:map-point-wave-linear" className="size-3.5 shrink-0" aria-hidden />
           <span className="min-w-0 truncate">{v.stopName ? <>Dekat: <Highlight text={v.stopName} query={query} /></> : 'Halte tidak diketahui'}</span>
-          <span className="shrink-0 tabular-nums">
+          <span className={`shrink-0 tabular-nums ${stale ? 'font-medium text-arriving' : ''}`}>
             · <span className="min-[400px]:hidden">{formatRelativeShort(v.updatedAt)}</span>
             <span className="max-[399px]:hidden">{formatRelative(v.updatedAt)}</span>
           </span>

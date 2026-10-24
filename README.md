@@ -28,7 +28,7 @@ npm ci
 npm run dev        # pengembangan lokal
 npm run build      # build produksi ke dist/
 npm run preview    # menjalankan hasil build
-npm test           # vitest (78 tes)
+npm test           # vitest (99 tes)
 npm run lint       # oxlint
 npm run typecheck  # tsc -b --noEmit
 ```
@@ -109,6 +109,10 @@ Halaman aktif, filter, halaman, ukuran, dan kendaraan yang dibuka disimpan di qu
 
 `api/errors.ts` memetakan error ke pesan Indonesia: jaringan putus, 429, 400, 404, 5xx. Kebijakan retry: jaringan dan 5xx diulang dua kali, 429 sekali, 4xx lain tidak. Header `x-ratelimit-*` tidak bisa dibaca browser (CORS tidak mengeksposnya), jadi saat 429 hitung mundur dihitung sendiri sampai batas menit berikutnya dan permintaan diulang otomatis di sana. Bila pembaruan gagal tetapi data lama masih ada, grid tetap tampil dengan banner "Gagal memperbarui, menampilkan data terakhir". Data diperbarui otomatis tiap 30 detik (bisa dimatikan, berhenti saat tab tersembunyi), plus tombol "Muat ulang".
 
+### Halte terdekat, nama jalan, dan GPS basi
+
+Daftar kendaraan meminta `include=route,trip,stop` (dengan `fields[stop]=name`) dalam satu permintaan yang sama: sekitar 25 KB menjadi 34 KB gzip untuk 317 kendaraan, tanpa permintaan tambahan. Kartu menampilkan "Dekat: <halte>" sebagai lokasi utama, lat/lng menjadi baris kecil, dan nama halte ikut dicari oleh kotak cari. Nama jalan di popup detail memakai Photon (cadangan Nominatim), satu permintaan per popup dibuka, di-cache per koordinat 3 desimal (`hooks/useStreetName.ts`, `api/geocode.ts`); bila gagal tidak ada tampilan tambahan. Kendaraan dengan `updated_at` lebih dari 5 menit (`lib/stale.ts`) diberi lencana "GPS tidak update", kartu statistik yang bisa disaring (`?status=basi`), dan penanda peta yang pudar.
+
 ### Peta
 
 `FleetMap` (Peta Armada) menaruh semua kendaraan yang sedang disaring sebagai penanda `DivIcon` yang sama dengan peta detail, memuat ulang batasnya hanya saat filter berubah (bukan tiap 30 detik, supaya peta yang sedang digeser tidak melompat), dan juga lazy. `VehicleMap` dimuat dengan `React.lazy` hanya saat popup dibuka, jadi Leaflet (sekitar 155 KB) tidak ikut bundle awal. Penanda memakai `DivIcon` berwarna sesuai rute dan berputar mengikuti arah hadap, sehingga masalah ikon PNG bawaan Leaflet di bundler tidak muncul. Peta bergeser mengikuti posisi saat data diperbarui (detail ikut dimuat ulang tiap 30 detik selama popup terbuka), ukurannya dihitung ulang saat popup selesai tampil, kegagalan memuat tile ditampilkan sebagai pemberitahuan kecil, dan bila chunk peta gagal dimuat popup tetap bisa dipakai dengan tombol "Coba lagi".
@@ -120,7 +124,7 @@ Halaman aktif, filter, halaman, ukuran, dan kendaraan yang dibuka disimpan di qu
 | Kebutuhan tes | Implementasi |
 |---|---|
 | Daftar kendaraan dari API | `api/vehicles.ts`, `hooks/useVehicles.ts`, `features/vehicles/VehicleGrid.tsx` |
-| Label, status (IN_TRANSIT_TO, STOPPED_AT, dll), lat/lng, waktu update | `VehicleCard.tsx`, `components/StatusBadge.tsx`, `lib/status.ts`, `lib/format.ts` |
+| Label, status (IN_TRANSIT_TO, STOPPED_AT, dll), lat/lng, waktu update | `VehicleCard.tsx`, `components/StatusBadge.tsx` (lencana Indonesia, nilai API di tooltip), `lib/status.ts`, `lib/format.ts` |
 | Filter Route, multi-select, infinite scroll dari API | `VehicleFilters.tsx`, `hooks/useRouteOptions.ts`, `components/MultiSelect.tsx` |
 | Filter Trip mengikuti route | `hooks/useTripOptions.ts`, `lib/tripSelection.ts`, `api/trips.ts` |
 | Pagination: rentang, jumlah halaman, pilihan per halaman, pindah halaman | `lib/paginate.ts`, `components/Pagination.tsx`, `components/PageSizeSelect.tsx` |
@@ -128,7 +132,7 @@ Halaman aktif, filter, halaman, ukuran, dan kendaraan yang dibuka disimpan di qu
 | Menu samping dan peta armada (tambahan) | `layout/AppShell.tsx`, `features/map/`, `features/about/` |
 | Loading, kosong, dan error | `components/Skeletons.tsx`, `EmptyState.tsx`, `ErrorState.tsx`, `StaleBanner.tsx` |
 | Responsif | grid 1 sampai 4 kolom, menu samping jadi laci di HP, popup layar penuh di HP |
-| TypeScript dan tes | `strict`, 78 tes (vitest + Testing Library), lint dan typecheck di CI |
+| TypeScript dan tes | `strict`, 99 tes (vitest + Testing Library), lint dan typecheck di CI |
 | Deploy | GitHub Pages lewat `.github/workflows/deploy.yml` |
 
 ![Tampilan HP](docs/screenshot-mobile.png)

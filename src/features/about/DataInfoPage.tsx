@@ -107,6 +107,23 @@ export default function DataInfoPage() {
         </table>
       </Block>
 
+      <Block icon="solar:map-point-wave-linear" title="Lokasi dan GPS">
+        <p>
+          Baris <strong>&quot;Dekat: ...&quot;</strong> di kartu adalah halte yang dikaitkan MBTA dengan kendaraan (halte yang sedang disinggahi atau dituju).
+          Namanya ikut terambil dalam permintaan daftar kendaraan yang sama, jadi tidak ada permintaan tambahan, dan bisa dicari lewat kotak cari.
+        </p>
+        <p>
+          Nama jalan di popup detail dicari lewat <strong>Photon (komoot)</strong>, dengan <strong>Nominatim</strong> sebagai cadangan. Keduanya memakai data
+          &copy; OpenStreetMap. Pencarian hanya dilakukan <strong>satu kali tiap popup dibuka</strong>, tidak pernah dari daftar, dan hasilnya disimpan per koordinat
+          yang dibulatkan ke 3 desimal (sekitar 100 m) supaya pembaruan 30 detik tidak mengulang permintaan. Ini mengikuti batas pemakaian wajar layanan gratis
+          tersebut. Bila gagal, baris lokasi tidak ditampilkan dan koordinat tetap ada.
+        </p>
+        <p>
+          Kendaraan yang <code className={code}>updated_at</code>-nya lebih dari <strong>5 menit</strong> lalu diberi lencana &quot;GPS tidak update&quot;,
+          waktunya berwarna oranye, dan penandanya di peta menjadi pudar dengan garis putus-putus. Angkanya ada di kartu &quot;GPS tidak update&quot; yang bisa diklik untuk menyaring.
+        </p>
+      </Block>
+
       <Block icon="solar:check-square-linear" title="Teknologi">
         <ul className="divide-y divide-line/70">
           {STACK.map(([name, note]) => (

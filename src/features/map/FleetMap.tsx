@@ -1,6 +1,7 @@
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { isStale } from '../../lib/stale'
 import { MapContainer, Marker, TileLayer, useMap } from 'react-leaflet'
 import type { VehicleView } from '../../api/vehicles'
 import { vehicleIcon } from '../vehicles/vehicleIcon'
@@ -75,7 +76,7 @@ export default function FleetMap({ vehicles, fitKey, focusId, onOpen }: Props) {
           <Marker
             key={v.id}
             position={[v.lat!, v.lng!]}
-            icon={vehicleIcon(v.route?.color ?? FALLBACK.color, v.route?.textColor ?? FALLBACK.text, v.bearing)}
+            icon={vehicleIcon(v.route?.color ?? FALLBACK.color, v.route?.textColor ?? FALLBACK.text, v.bearing, isStale(v.updatedAt))}
             title={`Kendaraan ${v.label}${v.route ? `, ${v.route.name}` : ''}`}
             eventHandlers={{ click: () => onOpen(v.id) }}
           />

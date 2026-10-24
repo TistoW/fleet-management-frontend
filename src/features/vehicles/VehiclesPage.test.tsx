@@ -105,3 +105,13 @@ it('says so when the stop is unknown', async () => {
   render(<App />)
   expect(await screen.findByText('Halte tidak diketahui')).toBeInTheDocument()
 })
+
+it('flags stale GPS: stat card filters via ?status=basi and cards carry the badge', async () => {
+  render(<App />)
+  await screen.findByText('Menampilkan 1-4 dari 4 kendaraan')
+  // The fixtures are from 2026-10-22, so all four are stale now.
+  await userEvent.click(screen.getByRole('button', { name: /^\d+\s*GPS tidak update$/ }))
+  expect(window.location.search).toBe('?status=basi')
+  expect(await screen.findByText('1 filter aktif')).toBeInTheDocument()
+  expect(screen.getAllByText('GPS tidak update').length).toBeGreaterThanOrEqual(4)
+})

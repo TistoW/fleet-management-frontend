@@ -1,8 +1,10 @@
 import { Icon } from '@iconify/react'
 import type { VehicleView } from '../../api/vehicles'
 import Highlight from '../../components/Highlight'
+import StaleBadge from '../../components/StaleBadge'
 import StatusBadge from '../../components/StatusBadge'
 import { formatClockWib, formatCoord, formatRelativeShort } from '../../lib/format'
+import { isStale } from '../../lib/stale'
 import { statusInfo } from '../../lib/status'
 
 interface Props {
@@ -15,6 +17,7 @@ interface Props {
 /** The whole card opens the detail; "Lihat di peta" sits above the stretched button. */
 export default function VehicleCard({ vehicle: v, onOpen, onShowOnMap, query = '' }: Props) {
   const route = v.route
+  const stale = isStale(v.updatedAt)
   const aria = `Kendaraan ${v.label}${route ? `, ${route.name}` : ''}, ${statusInfo(v.status).label}`
   return (
     <div className="group relative flex h-full flex-col gap-3.5 rounded-2xl border border-line bg-paper p-5 transition-[border-color,box-shadow] hover:border-accent/40 hover:shadow-sm has-[button:focus-visible]:ring-2 has-[button:focus-visible]:ring-accent">
@@ -37,7 +40,10 @@ export default function VehicleCard({ vehicle: v, onOpen, onShowOnMap, query = '
           </span>
         )}
       </div>
-      <StatusBadge status={v.status} />
+      <div className="flex flex-wrap items-center gap-1.5">
+        <StatusBadge status={v.status} />
+        {stale && <StaleBadge />}
+      </div>
       <p className="flex items-start gap-1.5 text-sm font-medium" title={v.stopName ?? undefined}>
         <Icon icon="solar:map-point-wave-linear" className="mt-0.5 size-4 shrink-0 text-accent" aria-hidden />
         <span className={`min-w-0 ${v.stopName ? 'truncate' : 'text-ink-muted'}`}>
@@ -60,7 +66,7 @@ export default function VehicleCard({ vehicle: v, onOpen, onShowOnMap, query = '
           <dd>{formatCoord(v.lng)}</dd>
         </div>
       </dl>
-      <p className="mt-auto truncate whitespace-nowrap border-t border-line pt-3 text-xs text-ink-muted" title={`${formatClockWib(v.updatedAt)} WIB · ${formatRelativeShort(v.updatedAt)}`}>
+      <p className={`mt-auto truncate whitespace-nowrap border-t border-line pt-3 text-xs ${stale ? 'font-medium text-arriving' : 'text-ink-muted'}`} title={`${formatClockWib(v.updatedAt)} WIB · ${formatRelativeShort(v.updatedAt)}`}>
         {formatClockWib(v.updatedAt)} WIB · {formatRelativeShort(v.updatedAt)}
       </p>
       <div className="flex items-center gap-2">
