@@ -32,16 +32,19 @@ export function toTripView(t: Pick<Trip, 'id' | 'relationships'> & { attributes:
 
 const FIELDS = 'headsign,direction_id,block_id,name'
 
-/** /trips rejects requests without a filter (400), so at least one route is required. */
+/** Only trips running on the given service date (YYYY-MM-DD, Boston); without it /trips returns every service period.
+ * /trips rejects requests without a filter (400), so at least one route is required. */
 export async function fetchTripsPage(
   routeIds: string[],
   offset: number,
+  date: string,
   signal?: AbortSignal,
 ): Promise<Page<TripView>> {
   const doc = await apiGet<Trip[]>(
     '/trips',
     {
       'filter[route]': routeIds.join(','),
+      'filter[date]': date,
       'page[limit]': TRIP_PAGE_SIZE,
       'page[offset]': offset,
       'fields[trip]': FIELDS,
@@ -63,7 +66,7 @@ export async function fetchTripsByIds(ids: string[], signal?: AbortSignal): Prom
 }
 
 /** First-stop departure per trip id (ISO), one request for a whole trip page. Trips without a schedule are absent. */
-export async function fetchFirstDepartures(ids: string[], signal?: AbortSignal): Promise<Record<string, string>> {
+export async function fetchFirstDepartures(ids: string[], date: string, signal?: AbortSignal): Promise<Record<string, string>> {
   if (!ids.length) return {}
   const doc = await apiGet<
     { attributes: { departure_time: string | null; arrival_time: string | null }; relationships: { trip?: { data?: { id: string } | null } } }[]
@@ -72,6 +75,7 @@ export async function fetchFirstDepartures(ids: string[], signal?: AbortSignal):
     {
       'filter[trip]': ids.join(','),
       'filter[stop_sequence]': 'first',
+      'filter[date]': date,
       'fields[schedule]': 'departure_time,arrival_time',
     },
     signal,

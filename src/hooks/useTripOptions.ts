@@ -1,5 +1,6 @@
 import { keepPreviousData, useInfiniteQuery, useQueries, useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
+import { serviceDate } from '../lib/serviceDate'
 import { fetchFirstDepartures, fetchTripsByIds, fetchTripsPage, type TripView } from '../api/trips'
 
 const MAX_LABEL_IDS = 100
@@ -10,9 +11,10 @@ const MAX_LABEL_IDS = 100
  */
 export function useTripOptions(routes: string[], runningIds: string[], selectedIds: string[]) {
   const sortedRoutes = [...routes].sort()
+  const date = serviceDate()
   const all = useInfiniteQuery({
-    queryKey: ['trips', sortedRoutes],
-    queryFn: ({ pageParam, signal }) => fetchTripsPage(sortedRoutes, pageParam, signal),
+    queryKey: ['trips', sortedRoutes, date],
+    queryFn: ({ pageParam, signal }) => fetchTripsPage(sortedRoutes, pageParam, date, signal),
     initialPageParam: 0,
     getNextPageParam: (last) => last.nextOffset ?? undefined,
     enabled: routes.length > 0,
@@ -32,8 +34,8 @@ export function useTripOptions(routes: string[], runningIds: string[], selectedI
     queries: (all.data?.pages ?? []).map((p) => {
       const pageIds = p.items.map((t) => t.id)
       return {
-        queryKey: ['tripTimes', pageIds],
-        queryFn: ({ signal }: { signal: AbortSignal }) => fetchFirstDepartures(pageIds, signal),
+        queryKey: ['tripTimes', pageIds, date],
+        queryFn: ({ signal }: { signal: AbortSignal }) => fetchFirstDepartures(pageIds, date, signal),
         staleTime: 5 * 60_000,
         retry: false,
       }
